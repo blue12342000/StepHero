@@ -6,6 +6,7 @@
 #include <string>
 #include <cmath>
 #include <ctime>
+#include <vector>
 #include <conio.h>
 
 using namespace std;
@@ -29,6 +30,23 @@ int G_LVL_EXP_TABLE[15][2] = { {1, 10}
 							  ,{13, 50}
 							  ,{14, 50}
 							  ,{15, 50} };
+struct DungeonSet
+{
+	int rows;
+	int cols;
+
+	int** fieldSet = nullptr;
+
+	void Release()
+	{
+		for (int i = 0; i < rows; ++i)
+		{
+			delete[] fieldSet[i];
+		}
+		delete[] fieldSet;
+	}
+};
+DungeonSet dungeonSet[10];
 
 struct Monster
 {
@@ -71,39 +89,60 @@ struct MonsterTable
 	}
 };
 
+struct Region
+{
+	int templateNo;
+	Region* nextRegion = nullptr;
+};
+
+struct RegionList
+{
+	int size = 0;
+	Region* head = nullptr;
+
+	void PushBack(Region* region)
+	{
+		Region* curr = head;
+		if (curr)
+		{
+			while (curr->nextRegion)
+			{
+				curr = curr->nextRegion;
+			}
+			curr->nextRegion = region;
+		}
+		else head = region;
+		++size;
+	}
+
+	Region* PopRegion()
+	{
+		Region* region = head;
+		if (head)
+		{
+			head = head->nextRegion;
+			--size;
+		}
+		return region;
+	}
+};
+
 struct Room
 {
 	int locX;
 	int locY;
 
-	int fieldType;
+	int fieldType = -1;
 	//char data;
 
 	// 0 위 1 아래 2 왼쪽 3 오른쪽
 	Room* next[4] = { nullptr, nullptr, nullptr, nullptr };
 	Monster* monster = nullptr;
-};
 
-struct Dungeon
-{
-	int rows;
-	int cols;
-	int exitPosX;
-	int exitPosY;
-
-	int noticeCount;
-	string notice[7];
-
-	Room** map;
-};
-
-struct Difficulty
-{
-	int dungeonSize[3] = { 10, 13, 15 };
-	int heroHP[3] = { 100, 90, 80 };
-	int monsterStrength[3] = { 1, 2, 3 };
-	int monsterEncounter[3] = { 20, 40, 60 };
-	string name[3] = { "EASY", "NORMAL", "HARD" };
+	void Release()
+	{
+		if (monster) delete monster;
+	}
 };
 
 struct ShopItem
@@ -212,6 +251,250 @@ struct Hero
 	}
 };
 
+struct Dungeon
+{
+	int rows;
+	int cols;
+	int exitPosX;
+	int exitPosY;
+
+	int noticeCount;
+	string notice[7];
+
+	Room** room;
+
+	void CreateDungeon(int _size, int _difficulty, int _exitPosX, int _exitPosY)
+	{
+		rows = _size;
+		cols = _size;
+		exitPosX = _exitPosX;
+		exitPosY = _exitPosY;
+
+		room = new Room*[rows];
+		for (int i = 0; i < rows; i++)		// y축
+		{
+			room[i] = new Room[cols];
+			for (int j = 0; j < cols; j++)	// x축
+			{
+				room[i][j].locX = j;
+				room[i][j].locY = i;
+				room[i][j].monster = nullptr;
+				// 0 위 1 아래 2 왼쪽 3 오른쪽
+				if (i > 0)
+				{
+					room[i][j].next[0] = &room[i - 1][j];
+					room[i - 1][j].next[1] = &room[i][j];
+				}
+				if (j > 0)
+				{
+					room[i][j].next[2] = &room[i][j - 1];
+					room[i][j - 1].next[3] = &room[i][j];
+				}
+			}
+		}
+
+		/*
+		0-1 : type 1 5x10
+		2-5 : type 2 5x5
+		6-7 : type 3 10x3  어려웅 1
+		8-9 : type 4 10x2  보통 1
+		*/
+		// 던전 구축을 위한 뼈대 삽입
+		// type 1 max : 2 type 3, 4 max 1;
+		RegionList regionList;
+		Region region;
+		switch (rand() % 3)
+		{
+		case 0:
+			// 5x5로만 구성
+			for (int i = 0; i < (rows / 5) * (cols / 5); ++i)
+			{
+				region.templateNo = rand() % 4 + 2;
+				regionList.PushBack(new Region(region));
+			}
+			break;
+		case 1:
+			// type 1 한개 삽입
+			region.templateNo = rand() % 2;
+			regionList.PushBack(new Region(region));
+
+			for (int i = 0; i < ((rows - 5) / 5) * (cols / 5); ++i)
+			{
+				region.templateNo = rand() % 4 + 2;
+				regionList.PushBack(new Region(region));
+			}
+			break;
+		case 2:
+			// type 1 두개 삽입
+			region.templateNo = rand() % 2;
+			regionList.PushBack(new Region(region));
+
+			region.templateNo = rand() % 2;
+			regionList.PushBack(new Region(region));
+
+			for (int i = 0; i < ((rows - 10) / 5) * (cols / 5); ++i)
+			{
+				region.templateNo = rand() % 4 + 2;
+				regionList.PushBack(new Region(region));
+			}
+
+			break;
+		}
+
+		// 확장 리전 (보통, 어려움)
+		Region* expsRegion = nullptr;
+		if (_difficulty == 1)
+		{
+			expsRegion = new Region();
+			expsRegion->templateNo = rand() % 2 + 8;
+		}
+		else if (_difficulty == 2)
+		{
+			expsRegion = new Region();
+			expsRegion->templateNo = rand() % 2 + 6;
+		}
+
+		while (regionList.size > 0)
+		{
+			Region* rg = regionList.PopRegion();
+			if (rg->templateNo < 2)
+			{
+				//  10x5 startX, startY = 0,0 or 0,5
+				int randIdx = rand() % 2;
+				pair<int, int> startPos[3] = { {0, 0}, {0, 5}, {0, 10} };
+				for (int i = 0; i < 2; ++i)
+				{
+					// x y
+					pair<int, int> pos = startPos[(randIdx + i) % (2 + ((_difficulty ==2)?1:0))];
+					if (room[pos.second][pos.first].fieldType == -1)
+					{
+						const DungeonSet& dg = dungeonSet[rg->templateNo];
+						for (int y = 0; y < dg.rows; ++y)
+						{
+							for (int x = 0; x < dg.cols; ++x)
+							{
+								room[y + pos.second][x + pos.first].fieldType = dg.fieldSet[y][x];
+							}
+						}
+
+						break;
+					}
+				}
+			}
+			else
+			{
+				// 5x5
+				int paddingX = 0;
+				for (int x = 0; x < (cols / 5) * 5 + paddingX; x += 5)
+				{
+					for (int y = 0; y < (rows / 5) * 5; y += 5)
+					{
+						if (y == 0 && expsRegion)
+						{
+							// 확장리전 적용
+							if (rand() % 3 < 1)
+							{
+								const DungeonSet& dg = dungeonSet[expsRegion->templateNo];
+								for (int dy = 0; dy < dg.rows; ++dy)
+								{
+									for (int dx = 0; dx < dg.cols; ++dx)
+									{
+										room[dy + y][dx + x].fieldType = dg.fieldSet[dy][dx];
+									}
+								}
+								paddingX = 3;
+								x += 3;
+								delete expsRegion;
+								expsRegion = nullptr;
+							}
+						}
+						else
+						{
+							// 5x5
+							const DungeonSet& dg = dungeonSet[rg->templateNo];
+							for (int dy = 0; dy < dg.rows; ++dy)
+							{
+								for (int dx = 0; dx < dg.cols; ++dx)
+								{
+									room[dy + y][dx + x].fieldType = dg.fieldSet[dy][dx];
+								}
+							}
+						}
+					}
+				}
+			}
+			delete rg;
+		}
+		if (expsRegion)
+		{
+			// 확장리전이 아직 미적용
+			const DungeonSet& dg = dungeonSet[expsRegion->templateNo];
+			for (int dy = 0; dy < dg.rows; ++dy)
+			{
+				for (int dx = 0; dx < dg.cols; ++dx)
+				{
+					if (room[dy][dx + cols - dg.cols - 1].fieldType == -1) room[dy][dx + cols - dg.cols - 1].fieldType = dg.fieldSet[dy][dx];
+				}
+			}
+			delete expsRegion;
+			expsRegion = nullptr;
+		}
+
+		// 템플릿 미적용된 타일 빈공간으로 채움
+		for (int y = 0; y < rows; ++y)
+		{
+			for (int x = 0; x < cols; ++x)
+			{
+				if (room[y][x].fieldType == -1) room[y][x].fieldType = 0;
+				room[y][x].monster = nullptr;
+			}
+		}
+	}
+
+	void PrintDungeon(Hero* player, bool isDebug = false)
+	{
+		cout << "   " << setfill('=') << setw((cols * 2 + 3)) << "" << endl;
+		cout.copyfmt(std::ios(NULL));
+		for (int i = 0; i < rows; i++)		// y축
+		{
+			cout << "   : ";
+			for (int j = 0; j < cols; j++)	// x축
+			{
+				if (player && i == player->posY && j == player->posX) cout << "O ";
+				else if (room[i][j].monster && !isDebug) cout << "M ";
+				else cout << G_CHAR_FIELD_TYPE[room[i][j].fieldType] << " ";
+			}
+			cout << ":\t    ";
+			if (i > 0 && i <= noticeCount) cout << notice[i - 1] << endl;
+			else cout << endl;
+		}
+		cout << "   " << setfill('=') << setw(cols * 2 + 3) << "" << endl;
+		cout.copyfmt(std::ios(NULL));
+	}
+
+	void Release()
+	{
+		for (int i = 0; i < rows; i++)
+		{
+			for (int j = 0; j < cols; ++j)
+			{
+				room[i][j].Release();
+			}
+			delete[] room[i];
+		}
+		delete[] room;
+	}
+};
+
+struct Difficulty
+{
+	int dungeonSize[3] = { 10, 13, 15 };
+	int heroHP[3] = { 100, 90, 80 };
+	int monsterStrength[3] = { 1, 2, 3 };
+	int monsterEncounter[3] = { 20, 40, 60 };
+	string name[3] = { "EASY", "NORMAL", "HARD" };
+};
+
 struct BattleItem
 {
 	string name;
@@ -225,7 +508,7 @@ struct BattleInfo
 	{
 		string line;
 		cout << "---------------------------------------------------------------------" << endl;
-		cout << left << "     [[ " << hero.name << " ]]" << right << setw(25 + monster.name.length()) << "[[ " << monster.name << " ]] " << endl;
+		cout << left << setw(38) << ("  [[ " + hero.name + " ]]") << ("[[ " + monster.name + " ]] ") << endl;
 		cout << "    레벨\t: " << right << setw(10) << hero.lvl << endl;
 		cout << "    공격력\t: " << right << setw(10) << hero.attack << setw(20) << "공격력\t: " << setw(10) << monster.attack << endl;
 		cout << "    체  력\t: " << right << setw(10) << string(to_string(hero.hp) + " / " + to_string(hero.maxHP)) << setw(20) << " 체  력\t: " << setw(10) << string(to_string(monster.hp) + " / " + to_string(monster.maxHP)) << endl;
@@ -237,6 +520,118 @@ struct BattleInfo
 
 int main()
 {
+	/*
+		0-1 : type 1 5x10
+		2-5 : type 2 5x5
+		6-7 : type 3 10x3
+		8-9 : type 4 10x2
+		던전의 형태 템플릿
+		0: 땅, 1: 숲, 2: 늪, 3: 벽, 4: 탈출구
+	*/
+#pragma region 던전템플릿
+	
+	dungeonSet[0] = { 5, 10 };
+	dungeonSet[0].fieldSet = new int*[dungeonSet[0].rows];
+	dungeonSet[0].fieldSet[0] = new int[dungeonSet[0].cols]{ 0, 0, 1, 1, 0, 0, 2, 2, 0, 0 };
+	dungeonSet[0].fieldSet[1] = new int[dungeonSet[0].cols]{ 0, 1, 1, 1, 1, 0, 2, 2, 2, 0 };
+	dungeonSet[0].fieldSet[2] = new int[dungeonSet[0].cols]{ 0, 0, 1, 1, 1, 0, 0, 0, 2, 2 };
+	dungeonSet[0].fieldSet[3] = new int[dungeonSet[0].cols]{ 0, 0, 1, 1, 1, 0, 0, 0, 0, 2 };
+	dungeonSet[0].fieldSet[4] = new int[dungeonSet[0].cols]{ 0, 0, 0, 1, 0, 0, 0, 0, 0, 2 };
+
+	dungeonSet[1] = { 5, 10 };
+	dungeonSet[1].fieldSet = new int*[dungeonSet[1].rows];
+	dungeonSet[1].fieldSet[0] = new int[dungeonSet[1].cols]{ 0, 0, 0, 1, 1, 0, 0, 0, 0, 0 };
+	dungeonSet[1].fieldSet[1] = new int[dungeonSet[1].cols]{ 0, 0, 1, 1, 1, 0, 0, 0, 0, 0 };
+	dungeonSet[1].fieldSet[2] = new int[dungeonSet[1].cols]{ 0, 0, 1, 1, 0, 0, 0, 0, 1, 0 };
+	dungeonSet[1].fieldSet[3] = new int[dungeonSet[1].cols]{ 0, 1, 1, 1, 0, 0, 1, 1, 1, 0 };
+	dungeonSet[1].fieldSet[4] = new int[dungeonSet[1].cols]{ 0, 0, 0, 1, 0, 1, 1, 1, 0, 0 };
+
+	dungeonSet[2] = { 5, 5 };
+	dungeonSet[2].fieldSet = new int*[dungeonSet[2].rows];
+	dungeonSet[2].fieldSet[0] = new int[dungeonSet[2].cols]{ 0, 0, 0, 0, 0 };
+	dungeonSet[2].fieldSet[1] = new int[dungeonSet[2].cols]{ 0, 0, 2, 0, 0 };
+	dungeonSet[2].fieldSet[2] = new int[dungeonSet[2].cols]{ 0, 2, 2, 2, 0 };
+	dungeonSet[2].fieldSet[3] = new int[dungeonSet[2].cols]{ 0, 0, 2, 0, 0 };
+	dungeonSet[2].fieldSet[4] = new int[dungeonSet[2].cols]{ 0, 0, 0, 0, 0 };
+
+	dungeonSet[3] = { 5, 5 };
+	dungeonSet[3].fieldSet = new int*[dungeonSet[3].rows];
+	dungeonSet[3].fieldSet[0] = new int[dungeonSet[3].cols]{ 0, 0, 0, 3, 0 };
+	dungeonSet[3].fieldSet[1] = new int[dungeonSet[3].cols]{ 3, 3, 0, 3, 0 };
+	dungeonSet[3].fieldSet[2] = new int[dungeonSet[3].cols]{ 0, 0, 1, 0, 0 };
+	dungeonSet[3].fieldSet[3] = new int[dungeonSet[3].cols]{ 0, 3, 0, 3, 3 };
+	dungeonSet[3].fieldSet[4] = new int[dungeonSet[3].cols]{ 0, 3, 0, 0, 0 };
+
+	dungeonSet[4] = { 5, 5 };
+	dungeonSet[4].fieldSet = new int*[dungeonSet[4].rows];
+	dungeonSet[4].fieldSet[0] = new int[dungeonSet[4].cols]{ 0, 2, 0, 3, 0 };
+	dungeonSet[4].fieldSet[1] = new int[dungeonSet[4].cols]{ 2, 2, 3, 0, 0 };
+	dungeonSet[4].fieldSet[2] = new int[dungeonSet[4].cols]{ 3, 0, 0, 0, 3 };
+	dungeonSet[4].fieldSet[3] = new int[dungeonSet[4].cols]{ 0, 0, 3, 1, 1 };
+	dungeonSet[4].fieldSet[4] = new int[dungeonSet[4].cols]{ 0, 0, 3, 1, 1 };
+
+	dungeonSet[5] = { 5, 5 };
+	dungeonSet[5].fieldSet = new int*[dungeonSet[5].rows];
+	dungeonSet[5].fieldSet[0] = new int[dungeonSet[5].cols]{ 0, 0, 1, 0, 0 };
+	dungeonSet[5].fieldSet[1] = new int[dungeonSet[5].cols]{ 0, 1, 0, 1, 0 };
+	dungeonSet[5].fieldSet[2] = new int[dungeonSet[5].cols]{ 1, 0, 1, 0, 1 };
+	dungeonSet[5].fieldSet[3] = new int[dungeonSet[5].cols]{ 0, 1, 0, 1, 0 };
+	dungeonSet[5].fieldSet[4] = new int[dungeonSet[5].cols]{ 0, 0, 1, 0, 0 };
+
+	dungeonSet[6] = { 10, 5 };
+	dungeonSet[6].fieldSet = new int*[dungeonSet[6].rows];
+	dungeonSet[6].fieldSet[0] = new int[dungeonSet[6].cols]{ 0, 0, 0, 0, 0 };
+	dungeonSet[6].fieldSet[1] = new int[dungeonSet[6].cols]{ 0, 1, 1, 1, 1 };
+	dungeonSet[6].fieldSet[2] = new int[dungeonSet[6].cols]{ 1, 1, 1, 1, 1 };
+	dungeonSet[6].fieldSet[3] = new int[dungeonSet[6].cols]{ 0, 0, 1, 0, 1 };
+	dungeonSet[6].fieldSet[4] = new int[dungeonSet[6].cols]{ 0, 0, 1, 0, 1 };
+	dungeonSet[6].fieldSet[5] = new int[dungeonSet[6].cols]{ 0, 0, 2, 0, 2 };
+	dungeonSet[6].fieldSet[6] = new int[dungeonSet[6].cols]{ 0, 2, 2, 2, 2 };
+	dungeonSet[6].fieldSet[7] = new int[dungeonSet[6].cols]{ 0, 2, 2, 2, 2 };
+	dungeonSet[6].fieldSet[8] = new int[dungeonSet[6].cols]{ 2, 2, 2, 2, 2 };
+	dungeonSet[6].fieldSet[9] = new int[dungeonSet[6].cols]{ 2, 2, 2, 2, 2 };
+
+	dungeonSet[7] = { 10, 5 };
+	dungeonSet[7].fieldSet = new int*[dungeonSet[7].rows];
+	dungeonSet[7].fieldSet[0] = new int[dungeonSet[7].cols]{ 0, 0, 0, 0, 0 };
+	dungeonSet[7].fieldSet[1] = new int[dungeonSet[7].cols]{ 0, 1, 0, 1, 1 };
+	dungeonSet[7].fieldSet[2] = new int[dungeonSet[7].cols]{ 0, 1, 1, 1, 1 };
+	dungeonSet[7].fieldSet[3] = new int[dungeonSet[7].cols]{ 0, 0, 0, 0, 1 };
+	dungeonSet[7].fieldSet[4] = new int[dungeonSet[7].cols]{ 0, 0, 0, 0, 1 };
+	dungeonSet[7].fieldSet[5] = new int[dungeonSet[7].cols]{ 0, 0, 1, 0, 0 };
+	dungeonSet[7].fieldSet[6] = new int[dungeonSet[7].cols]{ 0, 1, 0, 0, 0 };
+	dungeonSet[7].fieldSet[7] = new int[dungeonSet[7].cols]{ 1, 1, 0, 0, 0 };
+	dungeonSet[7].fieldSet[8] = new int[dungeonSet[7].cols]{ 0, 1, 0, 0, 0 };
+	dungeonSet[7].fieldSet[9] = new int[dungeonSet[7].cols]{ 0, 0, 0, 0, 0 };
+
+	dungeonSet[8] = { 10, 2 };
+	dungeonSet[8].fieldSet = new int*[dungeonSet[8].rows];
+	dungeonSet[8].fieldSet[0] = new int[dungeonSet[8].cols]{ 1, 1 };
+	dungeonSet[8].fieldSet[1] = new int[dungeonSet[8].cols]{ 0, 1 };
+	dungeonSet[8].fieldSet[2] = new int[dungeonSet[8].cols]{ 0, 0 };
+	dungeonSet[8].fieldSet[3] = new int[dungeonSet[8].cols]{ 0, 2 };
+	dungeonSet[8].fieldSet[4] = new int[dungeonSet[8].cols]{ 2, 2 };
+	dungeonSet[8].fieldSet[5] = new int[dungeonSet[8].cols]{ 0, 2 };
+	dungeonSet[8].fieldSet[6] = new int[dungeonSet[8].cols]{ 0, 0 };
+	dungeonSet[8].fieldSet[7] = new int[dungeonSet[8].cols]{ 0, 1 };
+	dungeonSet[8].fieldSet[8] = new int[dungeonSet[8].cols]{ 0, 1 };
+	dungeonSet[8].fieldSet[9] = new int[dungeonSet[8].cols]{ 0, 1 };
+
+	dungeonSet[9] = { 10, 2 };
+	dungeonSet[9].fieldSet = new int*[dungeonSet[9].rows];
+	dungeonSet[9].fieldSet[0] = new int[dungeonSet[9].cols]{ 0, 0 };
+	dungeonSet[9].fieldSet[1] = new int[dungeonSet[9].cols]{ 0, 0 };
+	dungeonSet[9].fieldSet[2] = new int[dungeonSet[9].cols]{ 1, 0 };
+	dungeonSet[9].fieldSet[3] = new int[dungeonSet[9].cols]{ 0, 1 };
+	dungeonSet[9].fieldSet[4] = new int[dungeonSet[9].cols]{ 0, 0 };
+	dungeonSet[9].fieldSet[5] = new int[dungeonSet[9].cols]{ 0, 0 };
+	dungeonSet[9].fieldSet[6] = new int[dungeonSet[9].cols]{ 0, 0 };
+	dungeonSet[9].fieldSet[7] = new int[dungeonSet[9].cols]{ 1, 0 };
+	dungeonSet[9].fieldSet[8] = new int[dungeonSet[9].cols]{ 0, 0 };
+	dungeonSet[9].fieldSet[9] = new int[dungeonSet[9].cols]{ 0, 0 };
+
+#pragma endregion
+
 	srand(time(NULL));
 
 	system("MODE CON COLS=100 LINES=50");
@@ -377,42 +772,43 @@ int main()
 	monsterTable.monster[2][3] = { 16 * mStrength, 40 * mStrength, 40 * mStrength, 35, 100, 0, "식인식물" };
 
 	// 맵 초기화
-	dungeon.map = new Room*[difficulty.dungeonSize[difficultyInput]];
-	for (int i = 0; i < dungeon.rows; i++)		// y축
-	{
-		dungeon.map[i] = new Room[difficulty.dungeonSize[difficultyInput]];
-		for (int j = 0; j < dungeon.cols; j++)	// x축
-		{
-			dungeon.map[i][j].locX = j;
-			dungeon.map[i][j].locY = i;
-
-			dungeon.map[i][j].fieldType = rand() % 4;
-			if (!(i == 0 && j == 0) && rand() % 300 < difficulty.monsterEncounter[difficultyInput])
-			{
-				// 몬스터 생성
-				//dungeon.map[i][j].data = 'M';
-				dungeon.map[i][j].monster = monsterTable.CreateMonster(dungeon.map[i][j].fieldType);
-			}
-
-			// 0 위 1 아래 2 왼쪽 3 오른쪽
-			if (i > 0)
-			{
-				dungeon.map[i][j].next[0] = &dungeon.map[i - 1][j];
-				dungeon.map[i - 1][j].next[1] = &dungeon.map[i][j];
-			}
-			if (j > 0)
-			{
-				dungeon.map[i][j].next[2] = &dungeon.map[i][j - 1];
-				dungeon.map[i][j - 1].next[3] = &dungeon.map[i][j];
-			}
-		}
-	}
+	//dungeon.room = new Room*[difficulty.dungeonSize[difficultyInput]];
+	//for (int i = 0; i < dungeon.rows; i++)		// y축
+	//{
+	//	dungeon.room[i] = new Room[difficulty.dungeonSize[difficultyInput]];
+	//	for (int j = 0; j < dungeon.cols; j++)	// x축
+	//	{
+	//		dungeon.room[i][j].locX = j;
+	//		dungeon.room[i][j].locY = i;
+	//
+	//		dungeon.room[i][j].fieldType = rand() % 4;
+	//		if (!(i == 0 && j == 0) && rand() % 300 < difficulty.monsterEncounter[difficultyInput])
+	//		{
+	//			// 몬스터 생성
+	//			//dungeon.map[i][j].data = 'M';
+	//			dungeon.room[i][j].monster = monsterTable.CreateMonster(dungeon.room[i][j].fieldType);
+	//		}
+	//
+	//		// 0 위 1 아래 2 왼쪽 3 오른쪽
+	//		if (i > 0)
+	//		{
+	//			dungeon.room[i][j].next[0] = &dungeon.room[i - 1][j];
+	//			dungeon.room[i - 1][j].next[1] = &dungeon.room[i][j];
+	//		}
+	//		if (j > 0)
+	//		{
+	//			dungeon.room[i][j].next[2] = &dungeon.room[i][j - 1];
+	//			dungeon.room[i][j - 1].next[3] = &dungeon.room[i][j];
+	//		}
+	//	}
+	//}
+	dungeon.CreateDungeon(difficulty.dungeonSize[difficultyInput], difficultyInput, 0, 0);
 
 	// 탈출구 정보 적용
 	int randNum = rand() % (dungeon.rows * dungeon.cols - 2) + 1;
 	dungeon.exitPosX = randNum % dungeon.cols;
 	dungeon.exitPosY = randNum / dungeon.rows;
-	dungeon.map[dungeon.exitPosY][dungeon.exitPosX].fieldType = 4;
+	dungeon.room[dungeon.exitPosY][dungeon.exitPosX].fieldType = 4;
 
 	while (1)
 	{
@@ -427,25 +823,9 @@ int main()
 		cout << "          #    #    #      #          #   #  #      #  #   #   #     " << endl;
 		cout << "      #####    #    #####  #          #   #  #####  #   #  #####     " << endl;
 		cout << "---------------------------------------------------------------------" << endl;
-		cout << "   " << setfill('=') << setw((dungeon.cols * 2 + 3)) << "" << endl;
-		cout.copyfmt(std::ios(NULL));
-		for (int i = 0; i < dungeon.rows; i++)		// y축
-		{
-			cout << "   : ";
-			for (int j = 0; j < dungeon.cols; j++)	// x축
-			{
-				if (i == player.posY && j == player.posX) cout << "O ";
-				else if (dungeon.map[i][j].monster && !debug) cout << ". ";
-				else cout << G_CHAR_FIELD_TYPE[dungeon.map[i][j].fieldType] << " ";
-			}
-			cout << ":\t    ";
-			if (i > 0 && i <= dungeon.noticeCount) cout << dungeon.notice[i - 1] << endl;
-			else cout << endl;
-		}
-		cout << "   " << setfill('=') << setw(dungeon.cols * 2 + 3) << "" << endl;
-		cout.copyfmt(std::ios(NULL));
+		dungeon.PrintDungeon(&player, debug);
 
-		if (G_CHAR_FIELD_TYPE[dungeon.map[player.posY][player.posX].fieldType] == 'E')
+		if (G_CHAR_FIELD_TYPE[dungeon.room[player.posY][player.posX].fieldType] == 'E')
 		{
 			// 탈출
 			cout << "---------------------------------------------------------------------" << endl;
@@ -458,12 +838,12 @@ int main()
 			cout << "---------------------------------------------------------------------" << endl;
 			break;
 		}
-		else if (player.state == 0 && dungeon.map[player.posY][player.posX].monster)
+		else if (player.state == 0 && dungeon.room[player.posY][player.posX].monster)
 		{
 			player.state = 1;
 
 			// 몬스터가 있는 위치에 들어옴
-			Monster& monster = *(dungeon.map[player.posY][player.posX].monster);
+			Monster& monster = *(dungeon.room[player.posY][player.posX].monster);
 			battleInfo.PrintBattleStatus(player, monster);
 			cout << right << setw(53) << "******* 몬스터와 조우하였다!! *******" << endl << endl;
 			int playerInput = rand() % 3;
@@ -489,6 +869,7 @@ int main()
 			{
 				// 승리 처리
 				cout << right << setw(42) << "***  승  리  ***" << endl;
+				cout << "---------------------------------------------------------------------" << endl;
 				cout << ":::: 몬스터와의 전투에서 승리하였다" << endl;
 				if (monster.HitDamage(player.attack) == 1)
 				{
@@ -504,7 +885,7 @@ int main()
 					}
 
 					delete &monster;
-					dungeon.map[player.posY][player.posX].monster = nullptr;
+					dungeon.room[player.posY][player.posX].monster = nullptr;
 				}
 				else
 				{
@@ -516,6 +897,7 @@ int main()
 			{
 				// 패배 처리
 				cout << right << setw(42) << "***  패  배  ***" << endl;
+				cout << "---------------------------------------------------------------------" << endl;
 				cout << ":::: 몬스터와의 전투에서 패배하였다" << endl;
 				cout << ":::: " << monster.attack << "의 데미지를 받았다!!" << endl;
 
@@ -578,11 +960,6 @@ int main()
 				cout << setw(50) << "CHANGE :: W,S  SELECT :: ENTER" << endl << endl;
 
 				player.PrintHeroStatus();
-				//cout << "---------------------------------------------------------------------" << endl;
-				//cout << "     [[ " << player.name << " ]]" << endl;
-				//cout << "     체력\t: "  << right << setw(10) << string(to_string(player.hp) + " / " + to_string(player.maxHP)) << endl;
-				//cout << "     소지금\t: " << right << setw(10) << player.gold << endl;
-				//cout << "---------------------------------------------------------------------" << endl;
 				
 				switch (_getch())
 				{
@@ -655,31 +1032,10 @@ int main()
 			cout << "          #    #    #      #          #   #  #      #  #   #   #     " << endl;
 			cout << "      #####    #    #####  #          #   #  #####  #   #  #####     " << endl;
 			cout << "---------------------------------------------------------------------" << endl;
-			cout << "   " << setfill('=') << setw((dungeon.cols * 2 + 3)) << "" << endl;
-			cout.copyfmt(std::ios(NULL));
-			for (int i = 0; i < dungeon.rows; i++)		// y축
-			{
-				cout << "   : ";
-				for (int j = 0; j < dungeon.cols; j++)	// x축
-				{
-					if (i == player.posY && j == player.posX) cout << "O ";
-					else if (dungeon.map[i][j].monster && !debug) cout << ". ";
-					else cout << G_CHAR_FIELD_TYPE[dungeon.map[i][j].fieldType] << " ";
-				}
-				cout << ":\t    ";
-				if (i > 0 && i <= dungeon.noticeCount) cout << dungeon.notice[i - 1] << endl;
-				else cout << endl;
-			}
-			cout << "   " << setfill('=') << setw(dungeon.cols * 2 + 3) << "" << endl;
-			cout.copyfmt(std::ios(NULL));
+			dungeon.PrintDungeon(&player, debug);
 		}
 
 		player.PrintHeroStatus();
-		//cout << "---------------------------------------------------------------------" << endl;
-		//cout << "     [[ " << player.name << " ]]" << endl;
-		//cout << "     체력\t: " << right << setw(10) << string(to_string(player.hp) + " / " + to_string(player.maxHP)) << endl;
-		//cout << "     소지금\t: " << right << setw(10) << player.gold << endl;
-		//cout << "---------------------------------------------------------------------" << endl;
 		
 		cout << "::::  이동키를 눌러주세요 (W, A, S, D)..... ";
 		int inputKey = _getch();
@@ -758,15 +1114,12 @@ int main()
 	}
 
 	// 메모리 해제
-	for (int i = 0; i < dungeon.rows; i++)
+	dungeon.Release();
+
+	for (auto& ds : dungeonSet)
 	{
-		for (int j = 0; j < dungeon.cols; ++j)
-		{
-			if (dungeon.map[i][j].monster) delete dungeon.map[i][j].monster;
-		}
-		delete[] dungeon.map[i];
+		ds.Release();
 	}
-	delete[] dungeon.map;
 }
 
 // 프로그램 실행: <Ctrl+F5> 또는 [디버그] > [디버깅하지 않고 시작] 메뉴
