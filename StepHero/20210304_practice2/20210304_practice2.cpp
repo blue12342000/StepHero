@@ -10,64 +10,65 @@
 
 using namespace std;
 
+// 0: 땅, 1: 숲, 2: 늪, 3: 벽, 4: 탈출구
+char G_CHAR_FIELD_TYPE[5] = {'.', 'T', '~', '#', 'E'};
+// 레벨별 경험치 테이블
+int G_MAX_LEVEL = 15;
+int G_LVL_EXP_TABLE[15][2] = { {1, 10}
+							  ,{2, 10}
+							  ,{3, 10}
+							  ,{4, 10} 
+							  ,{5, 10} 
+							  ,{6, 10} 
+							  ,{7, 10} 
+							  ,{8, 10} 
+							  ,{9, 10} 
+							  ,{10, 50} 
+							  ,{11, 50} 
+							  ,{12, 50} 
+							  ,{13, 50}
+							  ,{14, 50}
+							  ,{15, 50} };
+
 struct Monster
 {
 	int attack;
+	int maxHP;
+	int hp;
+	int rootExp;
+	int rootGold;
+
+	// 0: LIVE, 1: DIE
+	int state = 0;
+
 	string name;
 
-	//Room* loc;
+	// 추후 사용
+	//Room* loc = nullptr;
+
+	int HitDamage(int damage)
+	{
+		hp -= damage;
+		if (hp <= 0)
+		{
+			hp = 0;
+			state = 1;
+		}
+		return state;
+	}
 };
 
 struct MonsterTable
 {
-	Monster monster[4];
-};
+	Monster monster[3][4];
 
-struct Hero
-{
-	int maxHP;
-	int hp;
-	int gold;
-	int posX;
-	int posY;
-	string name;
-
-	// 0: IDLE 1: BATTLE 2: SHOP
-	int state = 0;
-};
-
-struct Difficulty
-{
-	int dungeonSize[3] = { 10, 13, 15 };
-	int heroHP[3] = { 100, 90, 80 };
-	int monsterStrength[3] = { 1, 2, 3 };
-	int monsterEncounter[3] = { 20, 40, 60 };
-	string name[3] = { "EASY", "NORMAL", "HARD" };
-};
-
-struct ShopItem
-{
-	int gold;
-	int heal;
-	string name;
-};
-
-struct Shop
-{
-	int posX;
-	int posY;
-	string name;
-	ShopItem items[5];
-};
-
-struct BattleItem
-{
-	string name;
-};
-
-struct BattleInfo
-{
-	BattleItem item[3];
+	// 몬스터 생성	
+	Monster* CreateMonster(int fieldType)
+	{
+		// 0: 땅, 1: 숲, 2: 늪, 3: 벽, 4: 탈출구
+		if (fieldType == 3 || fieldType == 4) return nullptr;
+		return new Monster(monster[fieldType][rand() % 4]);
+	}
 };
 
 struct Room
@@ -75,7 +76,8 @@ struct Room
 	int locX;
 	int locY;
 
-	char data;
+	int fieldType;
+	//char data;
 
 	// 0 위 1 아래 2 왼쪽 3 오른쪽
 	Room* next[4] = { nullptr, nullptr, nullptr, nullptr };
@@ -95,9 +97,149 @@ struct Dungeon
 	Room** map;
 };
 
+struct Difficulty
+{
+	int dungeonSize[3] = { 10, 13, 15 };
+	int heroHP[3] = { 100, 90, 80 };
+	int monsterStrength[3] = { 1, 2, 3 };
+	int monsterEncounter[3] = { 20, 40, 60 };
+	string name[3] = { "EASY", "NORMAL", "HARD" };
+};
+
+struct ShopItem
+{
+	int gold;
+	int heal;
+	int qty;
+	string name;
+};
+
+struct Shop
+{
+	int posX;
+	int posY;
+	string name;
+	ShopItem items[5];
+
+	// 구매가 가능한가?
+	bool IsBuyItem(int selectItemNo)
+	{
+		if (items[selectItemNo].qty > 0)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	const ShopItem& BuyItem(int selectItemNo)
+	{
+		--items[selectItemNo].qty;
+		return items[selectItemNo];
+	}
+};
+
+struct Hero
+{
+	int maxHP;
+	int hp;
+	int gold;
+	int posX;
+	int posY;
+
+	int attack;
+	int lvl;
+	int exp;
+
+	string name;
+
+	// 0: IDLE 1: BATTLE 2: SHOP 3: DIE
+	int state = 0;
+
+	int RootExp(int rootExp)
+	{
+		int lvlUp = 0;
+		while (lvl < G_MAX_LEVEL && exp >= G_LVL_EXP_TABLE[lvl][1])
+		{
+			exp -= G_LVL_EXP_TABLE[lvl][1];
+			++lvl;
+			++lvlUp;
+
+			// 레벨업시 풀피 회복
+			hp = maxHP;
+		}
+		return lvlUp;
+	}
+
+	int HitDamage(int damage)
+	{
+		hp -= damage;
+		if (hp <= 0)
+		{
+			hp = 0;
+			state = 3;
+		}
+
+		return state;
+	}
+
+	bool IsPossibleUseGold(int needGold)
+	{
+		if (gold >= needGold) return true;
+		return false;
+	}
+
+	void UseItem(const ShopItem& item)
+	{
+		hp += item.heal;
+		if (hp > maxHP) hp = maxHP;
+	}
+
+	void UseGold(int useGold)
+	{
+		gold -= useGold;
+	}
+
+	void PrintHeroStatus()
+	{
+		cout << "---------------------------------------------------------------------" << endl;
+		cout << "     [[ " << name << " ]]" << endl;
+		cout << "     레벨\t: " << right << setw(10) << lvl << endl;
+		cout << "     공격력\t: " << right << setw(10) << attack << endl;
+		cout << "     체력\t: " << right << setw(10) << string(to_string(hp) + " / " + to_string(maxHP)) << endl;
+		cout << "     경험치\t: " << right << setw(10) << exp << endl;
+		cout << "     소지금\t: " << right << setw(10) << gold << endl;
+		cout << "---------------------------------------------------------------------" << endl;
+	}
+};
+
+struct BattleItem
+{
+	string name;
+};
+
+struct BattleInfo
+{
+	BattleItem item[3];
+
+	void PrintBattleStatus(Hero& hero, Monster& monster)
+	{
+		string line;
+		cout << "---------------------------------------------------------------------" << endl;
+		cout << left << "     [[ " << hero.name << " ]]" << right << setw(25 + monster.name.length()) << "[[ " << monster.name << " ]] " << endl;
+		cout << "    레벨\t: " << right << setw(10) << hero.lvl << endl;
+		cout << "    공격력\t: " << right << setw(10) << hero.attack << setw(20) << "공격력\t: " << setw(10) << monster.attack << endl;
+		cout << "    체  력\t: " << right << setw(10) << string(to_string(hero.hp) + " / " + to_string(hero.maxHP)) << setw(20) << " 체  력\t: " << setw(10) << string(to_string(monster.hp) + " / " + to_string(monster.maxHP)) << endl;
+		cout << "    경험치\t: " << right << setw(10) << hero.exp << endl;
+		cout << "    소지금\t: " << right << setw(10) << hero.gold << endl;
+		cout << "---------------------------------------------------------------------" << endl;
+	}
+};
+
 int main()
 {
 	srand(time(NULL));
+
+	system("MODE CON COLS=100 LINES=50");
 
 	// 난이도 정보
 	Difficulty difficulty;
@@ -113,7 +255,7 @@ int main()
 	dungeon.notice[4] = "";
 	dungeon.notice[5] = "  P : 몬스터위치 확인";
 	dungeon.notice[6] = "  M : 소지금 1000골드 UP";
-	dungeon.noticeCount = sizeof(dungeon.notice) / sizeof(string);
+	dungeon.noticeCount = 7;
 
 	// 맵 디버그 모드
 	bool debug = false;
@@ -171,7 +313,7 @@ int main()
 				// 플레이어의 난이도별 능력치 설정
 				dungeon.rows = difficulty.dungeonSize[difficultyInput];
 				dungeon.cols = difficulty.dungeonSize[difficultyInput];
-				player = { difficulty.heroHP[difficultyInput], difficulty.heroHP[difficultyInput], 1000, 0, 0 };
+				player = { difficulty.heroHP[difficultyInput], difficulty.heroHP[difficultyInput], 1000, 0, 0, 25, 1, 0 };
 				break;
 			case 27:
 				// ESC 입력 게임종료;
@@ -200,6 +342,40 @@ int main()
 		}
 	}
 
+	// 상점의 정보
+	Shop shop;
+	shop.items[0] = { 100, 999, 5, "전체회복" };
+	shop.items[1] = { 10, 10, 10, "10회복" };
+	shop.items[2] = { 20, 20, 20, "20회복" };
+	shop.items[3] = { 30, 30, 30, "30회복" };
+	shop.items[4] = { 40, 40, 40, "40회복" };
+
+	// 배틀정보
+	BattleInfo battleInfo;
+	battleInfo.item[0] = { "가위" };
+	battleInfo.item[1] = { "바위" };
+	battleInfo.item[2] = { " 보 " };
+
+	// 몬스터 설정
+	MonsterTable monsterTable;
+	int mStrength = difficulty.monsterStrength[difficultyInput];
+
+	// 0: 땅, 1: 숲, 2: 늪, 3: 벽, 4: 탈출구
+	monsterTable.monster[0][0] = { 10 * mStrength, 10 * mStrength, 10 * mStrength, 20, 30, 0, "두더지" };
+	monsterTable.monster[0][1] = { 12 * mStrength, 20 * mStrength, 20 * mStrength, 25, 50, 0, "슬라임" };
+	monsterTable.monster[0][2] = { 14 * mStrength, 30 * mStrength, 30 * mStrength, 30, 80, 0, "도적" };
+	monsterTable.monster[0][3] = { 16 * mStrength, 40 * mStrength, 40 * mStrength, 35, 100, 0, "산적" };
+
+	monsterTable.monster[1][0] = { 10 * mStrength, 10 * mStrength, 10 * mStrength, 20, 30, 0, "토끼" };
+	monsterTable.monster[1][1] = { 12 * mStrength, 20 * mStrength, 20 * mStrength, 25, 50, 0, "사슴" };
+	monsterTable.monster[1][2] = { 14 * mStrength, 30 * mStrength, 30 * mStrength, 30, 80, 0, "늑대" };
+	monsterTable.monster[1][3] = { 16 * mStrength, 40 * mStrength, 40 * mStrength, 35, 100, 0, "늑대인간" };
+
+	monsterTable.monster[2][0] = { 10 * mStrength, 10 * mStrength, 10 * mStrength, 20, 30, 0, "두꺼비" };
+	monsterTable.monster[2][1] = { 12 * mStrength, 20 * mStrength, 20 * mStrength, 25, 50, 0, "뱀" };
+	monsterTable.monster[2][2] = { 14 * mStrength, 30 * mStrength, 30 * mStrength, 30, 80, 0, "저주받은 나무" };
+	monsterTable.monster[2][3] = { 16 * mStrength, 40 * mStrength, 40 * mStrength, 35, 100, 0, "식인식물" };
+
 	// 맵 초기화
 	dungeon.map = new Room*[difficulty.dungeonSize[difficultyInput]];
 	for (int i = 0; i < dungeon.rows; i++)		// y축
@@ -210,10 +386,12 @@ int main()
 			dungeon.map[i][j].locX = j;
 			dungeon.map[i][j].locY = i;
 
-			dungeon.map[i][j].data = '.';
-			if(!(i == 0 && j == 0) && rand() % 300 < difficulty.monsterEncounter[difficultyInput])
+			dungeon.map[i][j].fieldType = rand() % 4;
+			if (!(i == 0 && j == 0) && rand() % 300 < difficulty.monsterEncounter[difficultyInput])
 			{
-				dungeon.map[i][j].data = 'M';
+				// 몬스터 생성
+				//dungeon.map[i][j].data = 'M';
+				dungeon.map[i][j].monster = monsterTable.CreateMonster(dungeon.map[i][j].fieldType);
 			}
 
 			// 0 위 1 아래 2 왼쪽 3 오른쪽
@@ -234,28 +412,7 @@ int main()
 	int randNum = rand() % (dungeon.rows * dungeon.cols - 2) + 1;
 	dungeon.exitPosX = randNum % dungeon.cols;
 	dungeon.exitPosY = randNum / dungeon.rows;
-	dungeon.map[dungeon.exitPosY][dungeon.exitPosX].data = 'E';
-
-	// 상점의 정보
-	Shop shop;
-	shop.items[0] = { 100, 999, "전체회복" };
-	shop.items[1] = { 10, 10, "10회복" };
-	shop.items[2] = { 20, 20, "20회복" };
-	shop.items[3] = { 30, 30, "30회복" };
-	shop.items[4] = { 40, 40, "40회복" };
-
-	// 배틀정보
-	BattleInfo battleInfo;
-	battleInfo.item[0] = { "가위" };
-	battleInfo.item[1] = { "바위" };
-	battleInfo.item[2] = { " 보 " };
-
-	// 몬스터 설정
-	MonsterTable monsterTable;
-	monsterTable.monster[0] = { 10 * difficulty.monsterStrength[difficultyInput], "청룡" };
-	monsterTable.monster[1] = { 12 * difficulty.monsterStrength[difficultyInput], "주작" };
-	monsterTable.monster[2] = { 14 * difficulty.monsterStrength[difficultyInput], "백호" };
-	monsterTable.monster[3] = { 16 * difficulty.monsterStrength[difficultyInput], "현무" };
+	dungeon.map[dungeon.exitPosY][dungeon.exitPosX].fieldType = 4;
 
 	while (1)
 	{
@@ -278,8 +435,8 @@ int main()
 			for (int j = 0; j < dungeon.cols; j++)	// x축
 			{
 				if (i == player.posY && j == player.posX) cout << "O ";
-				else if (dungeon.map[i][j].data == 'M' && !debug) cout << ". ";
-				else cout << dungeon.map[i][j].data << " ";
+				else if (dungeon.map[i][j].monster && !debug) cout << ". ";
+				else cout << G_CHAR_FIELD_TYPE[dungeon.map[i][j].fieldType] << " ";
 			}
 			cout << ":\t    ";
 			if (i > 0 && i <= dungeon.noticeCount) cout << dungeon.notice[i - 1] << endl;
@@ -288,7 +445,7 @@ int main()
 		cout << "   " << setfill('=') << setw(dungeon.cols * 2 + 3) << "" << endl;
 		cout.copyfmt(std::ios(NULL));
 
-		if (dungeon.map[player.posY][player.posX].data == 'E')
+		if (G_CHAR_FIELD_TYPE[dungeon.map[player.posY][player.posX].fieldType] == 'E')
 		{
 			// 탈출
 			cout << "---------------------------------------------------------------------" << endl;
@@ -301,13 +458,13 @@ int main()
 			cout << "---------------------------------------------------------------------" << endl;
 			break;
 		}
-		else if (player.state == 0 && dungeon.map[player.posY][player.posX].data == 'M')
+		else if (player.state == 0 && dungeon.map[player.posY][player.posX].monster)
 		{
 			player.state = 1;
 
 			// 몬스터가 있는 위치에 들어옴
-			Monster monster = monsterTable.monster[rand()%4];
-			cout << "---------------------------------------------------------------------" << endl;
+			Monster& monster = *(dungeon.map[player.posY][player.posX].monster);
+			battleInfo.PrintBattleStatus(player, monster);
 			cout << right << setw(53) << "******* 몬스터와 조우하였다!! *******" << endl << endl;
 			int playerInput = rand() % 3;
 			int monsterInput = rand() % 3;
@@ -331,36 +488,50 @@ int main()
 			if (playerInput == (monsterInput + 1) % 3)
 			{
 				// 승리 처리
-				int dropGold = rand() % 100 + 1;
-				player.gold += dropGold;
 				cout << right << setw(42) << "***  승  리  ***" << endl;
-				cout << "---------------------------------------------------------------------" << endl;
-				cout << ":::: 몬스터와의 전투에서 승리하였다 ==" << endl;
-				cout << ":::: " << dropGold << "골드 획득!! ==" << endl;
-				dungeon.map[player.posY][player.posX].data = '.';
+				cout << ":::: 몬스터와의 전투에서 승리하였다" << endl;
+				if (monster.HitDamage(player.attack) == 1)
+				{
+					cout << ":::: " << monster.rootExp << " 경험치 획득!!" << endl;
+					cout << ":::: " << monster.rootGold << " 골드 획득!!" << endl;
+
+					// 죽었는가?
+					player.gold += monster.rootGold;
+					int lvlUp = player.RootExp(monster.rootExp);
+					if (lvlUp)
+					{
+						cout << ":::: 플레이어 레벨이 " << lvlUp << " 올랐습니다." << endl;
+					}
+
+					delete &monster;
+					dungeon.map[player.posY][player.posX].monster = nullptr;
+				}
+				else
+				{
+					cout << ":::: 몬스터에게 " << player.attack << " 데미지를 주었다." << endl;
+					cout << ":::: 몬스터가 도망갔습니다." << endl;
+				}
 			}
 			else
 			{
 				// 패배 처리
-				player.hp -= monster.attack;
-				if (player.hp <= 0) player.hp = 0;
 				cout << right << setw(42) << "***  패  배  ***" << endl;
-				cout << "---------------------------------------------------------------------" << endl;
-				cout << ":::: 몬스터와의 전투에서 패배하였다 ==" << endl;
-				cout << ":::: " << monster.attack << "의 데미지를 받았다!! ==" << endl;
-			}
+				cout << ":::: 몬스터와의 전투에서 패배하였다" << endl;
+				cout << ":::: " << monster.attack << "의 데미지를 받았다!!" << endl;
 
-			if (player.hp == 0)
-			{
-				cout << "---------------------------------------------------------------------" << endl;
-				cout << "        #   #    ###    #     #       #####    #####   #####         " << endl;
-				cout << "        #   #   #   #   #     #       #    #     #     #             " << endl;
-				cout << "         # #   #     #  #     #       #     #    #     ###           " << endl;
-				cout << "          #    #     #  #     #       #     #    #     #             " << endl;
-				cout << "          #     #   #   #     #       #    #     #     #             " << endl;
-				cout << "          #      ###     #####        #####    #####   #####         " << endl;
-				cout << "---------------------------------------------------------------------" << endl;
-				break;
+				// 플레이어의 상태가 죽은상태인가?
+				if (player.HitDamage(monster.attack) == 3)
+				{
+					cout << "---------------------------------------------------------------------" << endl;
+					cout << "        #   #    ###    #     #       #####    #####   #####         " << endl;
+					cout << "        #   #   #   #   #     #       #    #     #     #             " << endl;
+					cout << "         # #   #     #  #     #       #     #    #     ###           " << endl;
+					cout << "          #    #     #  #     #       #     #    #     #             " << endl;
+					cout << "          #     #   #   #     #       #    #     #     #             " << endl;
+					cout << "          #      ###     #####        #####    #####   #####         " << endl;
+					cout << "---------------------------------------------------------------------" << endl;
+					break;
+				}
 			}
 
 			cout << "---------------------------------------------------------------------" << endl;
@@ -391,24 +562,27 @@ int main()
 				for (int i = 0; i < itemCount; ++i)
 				{
 					ShopItem& item = shop.items[i];
-					string itemLabel = to_string((i + 1)) + ". " + item.name + " (" + to_string(item.gold) + " GOLD)";
+					string itemLabel = to_string((i + 1)) + ". " + item.name + " (" + to_string(item.gold) + " GOLD)\t남은수량 : " + to_string(item.qty);
 					if (i == selectItem)
 					{
-						cout << setw(23) << ">>> " << itemLabel << " <<<" << endl;
+						itemLabel = ">>> " + itemLabel + " <<<";
+						cout << right << setw(12 + itemLabel.length()) << itemLabel << endl;
 					}
 					else
 					{
-						cout << right << setw(24 + itemLabel.length()) << itemLabel << endl;
+						cout << right << setw(17 + itemLabel.length()) << itemLabel << endl;
 					}
 				}
-				cout << setw((selectItem == itemCount)?23:24) << ((selectItem == itemCount) ? ">>> " : "") << (itemCount+1) << ". 나가기" << ((selectItem == itemCount) ? " <<<" : "") << endl;
+				cout << setw((selectItem == itemCount)?29:30) << ((selectItem == itemCount) ? ">>> " : "") << (itemCount+1) << ". 나가기" << ((selectItem == itemCount) ? " <<<" : "") << endl;
 				cout << "                  ---------------------------------                  " << endl;
 				cout << setw(50) << "CHANGE :: W,S  SELECT :: ENTER" << endl << endl;
-				cout << "---------------------------------------------------------------------" << endl;
-				cout << "     [[ " << player.name << " ]]" << endl;
-				cout << "     체력\t: "  << right << setw(10) << string(to_string(player.hp) + " / " + to_string(player.maxHP)) << endl;
-				cout << "     소지금\t: " << right << setw(10) << player.gold << endl;
-				cout << "---------------------------------------------------------------------" << endl;
+
+				player.PrintHeroStatus();
+				//cout << "---------------------------------------------------------------------" << endl;
+				//cout << "     [[ " << player.name << " ]]" << endl;
+				//cout << "     체력\t: "  << right << setw(10) << string(to_string(player.hp) + " / " + to_string(player.maxHP)) << endl;
+				//cout << "     소지금\t: " << right << setw(10) << player.gold << endl;
+				//cout << "---------------------------------------------------------------------" << endl;
 				
 				switch (_getch())
 				{
@@ -424,12 +598,25 @@ int main()
 					// 상점물품 선택
 					if (selectItem < itemCount)
 					{ 
-						if (player.gold - shop.items[selectItem].gold >= 0)
+						if (player.IsPossibleUseGold(shop.items[selectItem].gold))
 						{
-							player.hp += shop.items[selectItem].heal;
-							if (player.hp > player.maxHP) player.hp = player.maxHP;
-							player.gold -= shop.items[selectItem].gold;
-							cout << right << setw(43 + shop.items[selectItem].name.length()) << string("******* 체력 " + shop.items[selectItem].name + " *******") << endl;
+							// 해당 골드는 갖고있다.
+							if (shop.IsBuyItem(selectItem))
+							{
+								// 물건이 정상적으로 사졌다
+								const ShopItem& item = shop.BuyItem(selectItem);
+								player.UseGold(item.gold);
+								player.UseItem(item);
+								cout << left << ":::: 소지금 " << item.gold << " GOLD 사용하였습니다." << endl;
+								cout << "---------------------------------------------------------------------" << endl;
+								cout << right << setw(43 + item.name.length()) << string("******* 체력 " + item.name + " *******") << endl;
+							}
+							else
+							{
+								// 물건이 없어서 구매 불가
+								cout << left << ":::: 품절된 상품입니다 " << endl;
+								cout << "---------------------------------------------------------------------" << endl;
+							}
 						}
 						else cout << right << setw(54) << "******* 소지금이 부족합니다!!! *******" << endl << endl;
 					}
@@ -476,8 +663,8 @@ int main()
 				for (int j = 0; j < dungeon.cols; j++)	// x축
 				{
 					if (i == player.posY && j == player.posX) cout << "O ";
-					else if (dungeon.map[i][j].data == 'M' && !debug) cout << ". ";
-					else cout << dungeon.map[i][j].data << " ";
+					else if (dungeon.map[i][j].monster && !debug) cout << ". ";
+					else cout << G_CHAR_FIELD_TYPE[dungeon.map[i][j].fieldType] << " ";
 				}
 				cout << ":\t    ";
 				if (i > 0 && i <= dungeon.noticeCount) cout << dungeon.notice[i - 1] << endl;
@@ -487,11 +674,12 @@ int main()
 			cout.copyfmt(std::ios(NULL));
 		}
 
-		cout << "---------------------------------------------------------------------" << endl;
-		cout << "     [[ " << player.name << " ]]" << endl;
-		cout << "     체력\t: " << right << setw(10) << string(to_string(player.hp) + " / " + to_string(player.maxHP)) << endl;
-		cout << "     소지금\t: " << right << setw(10) << player.gold << endl;
-		cout << "---------------------------------------------------------------------" << endl;
+		player.PrintHeroStatus();
+		//cout << "---------------------------------------------------------------------" << endl;
+		//cout << "     [[ " << player.name << " ]]" << endl;
+		//cout << "     체력\t: " << right << setw(10) << string(to_string(player.hp) + " / " + to_string(player.maxHP)) << endl;
+		//cout << "     소지금\t: " << right << setw(10) << player.gold << endl;
+		//cout << "---------------------------------------------------------------------" << endl;
 		
 		cout << "::::  이동키를 눌러주세요 (W, A, S, D)..... ";
 		int inputKey = _getch();
@@ -550,28 +738,33 @@ int main()
 		{
 			// 몬스터 이동
 			isMonsterMove = 0;
-			for (int i = 0; i < dungeon.rows; i++)
-			{
-				for (int j = 0; j < dungeon.cols; j++)
-				{
-					Room& room = dungeon.map[i][j];
-					if (room.data == 'M')
-					{
-						Room* next = room.next[rand() % 4];
-						if (next && next->data != 'E')
-						{
-							swap(room.data, next->data);
-						}
-					}
-				}
-			}
+			// 필드별 몬스터 귀속으로 했기에 이동 불가
+			//for (int i = 0; i < dungeon.rows; i++)
+			//{
+			//	for (int j = 0; j < dungeon.cols; j++)
+			//	{
+			//		Room& room = dungeon.map[i][j];
+			//		if (room.monster)
+			//		{
+			//			Room* next = room.next[rand() % 4];
+			//			if (next && next->data != 'E')
+			//			{
+			//				swap(room.data, next->data);
+			//			}
+			//		}
+			//	}
+			//}
 		}
 	}
 
-
+	// 메모리 해제
 	for (int i = 0; i < dungeon.rows; i++)
 	{
-		 delete[] dungeon.map[i];
+		for (int j = 0; j < dungeon.cols; ++j)
+		{
+			if (dungeon.map[i][j].monster) delete dungeon.map[i][j].monster;
+		}
+		delete[] dungeon.map[i];
 	}
 	delete[] dungeon.map;
 }
