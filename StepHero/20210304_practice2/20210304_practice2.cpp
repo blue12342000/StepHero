@@ -507,29 +507,29 @@ int main()
 	
 	dungeonSet[0] = { 10, 10 };
 	dungeonSet[0].fieldSet = new int* [dungeonSet[0].rows];
-	dungeonSet[0].fieldSet[0] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1 };
-	dungeonSet[0].fieldSet[1] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 0 };
-	dungeonSet[0].fieldSet[2] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 0, 2, 2, 2, 1, 1 };
-	dungeonSet[0].fieldSet[3] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 2, 2, 2, 0, 2, 1 };
-	dungeonSet[0].fieldSet[4] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2 };
-	dungeonSet[0].fieldSet[5] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0 };
-	dungeonSet[0].fieldSet[6] = new int[dungeonSet[0].cols]{ 0, 0, 0, 1, 0, 1, 1, 2, 0, 0, 0 };
-	dungeonSet[0].fieldSet[7] = new int[dungeonSet[0].cols]{ 0, 0, 1, 1, 0, 1, 1, 1, 2, 0, 0 };
-	dungeonSet[0].fieldSet[8] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 1, 0, 0, 1, 1, 2, 0 };
-	dungeonSet[0].fieldSet[9] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2 };
+	dungeonSet[0].fieldSet[0] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
+	dungeonSet[0].fieldSet[1] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 0, 0, 2, 1, 1 };
+	dungeonSet[0].fieldSet[2] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 0, 2, 2, 2, 1 };
+	dungeonSet[0].fieldSet[3] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 2, 2, 2, 0, 2 };
+	dungeonSet[0].fieldSet[4] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 0, 2, 0, 0, 0 };
+	dungeonSet[0].fieldSet[5] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 2, 2, 0, 0, 0 };
+	dungeonSet[0].fieldSet[6] = new int[dungeonSet[0].cols]{ 0, 0, 0, 1, 0, 1, 1, 2, 0, 0 };
+	dungeonSet[0].fieldSet[7] = new int[dungeonSet[0].cols]{ 0, 0, 1, 1, 0, 1, 1, 1, 2, 0 };
+	dungeonSet[0].fieldSet[8] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 1, 0, 0, 1, 1, 2 };
+	dungeonSet[0].fieldSet[9] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 0, 0, 0, 1, 2 };
 
 	dungeonSet[1] = { 10, 10 };
 	dungeonSet[1].fieldSet = new int* [dungeonSet[1].rows];
-	dungeonSet[1].fieldSet[0] = new int[dungeonSet[1].cols]{ 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 };
-	dungeonSet[1].fieldSet[1] = new int[dungeonSet[1].cols]{ 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0 };
-	dungeonSet[1].fieldSet[2] = new int[dungeonSet[1].cols]{ 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0 };
-	dungeonSet[1].fieldSet[3] = new int[dungeonSet[1].cols]{ 0, 0, 1, 1, 0, 0, 0, 0, 3, 0, 3 };
-	dungeonSet[1].fieldSet[4] = new int[dungeonSet[1].cols]{ 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0 };
-	dungeonSet[1].fieldSet[5] = new int[dungeonSet[1].cols]{ 0, 1, 1, 1, 0, 0, 0, 0, 3, 0, 3 };
-	dungeonSet[1].fieldSet[6] = new int[dungeonSet[1].cols]{ 0, 1, 1, 0, 3, 0, 3, 0, 0, 0, 0 };
-	dungeonSet[1].fieldSet[7] = new int[dungeonSet[1].cols]{ 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-	dungeonSet[1].fieldSet[8] = new int[dungeonSet[1].cols]{ 0, 0, 0, 0, 3, 0, 3, 0, 0, 0, 0 };
-	dungeonSet[1].fieldSet[9] = new int[dungeonSet[1].cols]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	dungeonSet[1].fieldSet[0] = new int[dungeonSet[1].cols]{ 0, 0, 0, 0, 0, 0, 0, 1, 1, 1 };
+	dungeonSet[1].fieldSet[1] = new int[dungeonSet[1].cols]{ 0, 0, 0, 0, 1, 1, 1, 1, 0, 0 };
+	dungeonSet[1].fieldSet[2] = new int[dungeonSet[1].cols]{ 0, 0, 0, 1, 1, 1, 0, 0, 0, 0 };
+	dungeonSet[1].fieldSet[3] = new int[dungeonSet[1].cols]{ 0, 0, 1, 1, 0, 0, 0, 0, 3, 0 };
+	dungeonSet[1].fieldSet[4] = new int[dungeonSet[1].cols]{ 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+	dungeonSet[1].fieldSet[5] = new int[dungeonSet[1].cols]{ 0, 1, 1, 1, 0, 0, 0, 0, 3, 0 };
+	dungeonSet[1].fieldSet[6] = new int[dungeonSet[1].cols]{ 0, 1, 1, 0, 3, 0, 3, 0, 0, 0 };
+	dungeonSet[1].fieldSet[7] = new int[dungeonSet[1].cols]{ 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
+	dungeonSet[1].fieldSet[8] = new int[dungeonSet[1].cols]{ 0, 0, 0, 0, 3, 0, 3, 0, 0, 0 };
+	dungeonSet[1].fieldSet[9] = new int[dungeonSet[1].cols]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 	dungeonSet[2] = { 5, 10 };
 	dungeonSet[2].fieldSet = new int*[dungeonSet[2].rows];
@@ -604,8 +604,6 @@ int main()
 	dungeonSet[9].fieldSet[2] = new int[dungeonSet[9].cols]{ 1, 0, 1, 0, 1 };
 	dungeonSet[9].fieldSet[3] = new int[dungeonSet[9].cols]{ 0, 1, 0, 1, 0 };
 	dungeonSet[9].fieldSet[4] = new int[dungeonSet[9].cols]{ 0, 0, 1, 0, 0 };
-
-
 #pragma endregion
 
 	srand(time(NULL));
@@ -1160,10 +1158,10 @@ int main()
 	// 메모리 해제
 	dungeon.Release();
 
-	//for (int i = 0; i < 10; ++i)
-	//{
-	//	dungeonSet[i].Release();
-	//}
+	for (int i = 0; i < 10; ++i)
+	{
+		dungeonSet[i].Release();
+	}
 }
 
 // 프로그램 실행: <Ctrl+F5> 또는 [디버그] > [디버깅하지 않고 시작] 메뉴
