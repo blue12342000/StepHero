@@ -15,6 +15,8 @@ using namespace std;
 char G_CHAR_FIELD_TYPE[6] = {'.', 'T', '~', '#', 'A', 'E'};
 enum FieldType { empty=0, wood, swamp, wall, fire, out, eof};
 enum HeroState { IDLE = 0, BATTLE, SHOP, DIE };
+enum QusetType { HUNT, MOVE, ETC };
+enum TargetType { HERO, NONE };
 
 // 레벨별 경험치 테이블
 int G_MAX_LEVEL = 15;
@@ -33,6 +35,51 @@ int G_LVL_EXP_TABLE[15][2] = { {1, 10}
 							  ,{13, 50}
 							  ,{14, 50}
 							  ,{15, 50} };
+
+struct TargetArgs
+{
+	bool isOrigin = false;
+	int size = 0;
+	void* args = nullptr;
+
+	void Release()
+	{
+		if (!isOrigin) delete[] args;
+	}
+};
+
+struct QuestNode
+{
+	int id;
+	string name;
+	string desc;
+
+	void (*fnQuestClearAction)(void*, TargetArgs);
+
+	// 선택퀘스트 - 본인과 같은 뎁스
+	QuestNode* firendQuset = nullptr;
+	// 이전퀘스트
+	QuestNode* exChainQuset = nullptr;
+	// 다음 연계 퀘스트
+	QuestNode* nextChainQuset = nullptr;
+};
+
+struct QuestList
+{
+	int size = 0;
+	QuestNode* QusetList = nullptr;
+};
+
+struct EquipItem
+{
+
+};
+
+struct EquipShop
+{
+
+};
+
 struct DungeonSet
 {
 	int rows;
@@ -1107,7 +1154,7 @@ struct Difficulty
 {
 	int dungeonSize[3] = { 10, 15, 20 };
 	int heroHP[3] = { 100, 90, 80 };
-	int monsterStrength[3] = { 1, 2, 3 };
+	float monsterStrength[3] = { 1, 1.5f, 2 };
 	int monsterEncounter[3] = { 20, 10, 10 };
 	string name[3] = { "EASY", "NORMAL", "HARD" };
 };
@@ -1129,18 +1176,12 @@ struct BattleInfo
 		cout << "    레벨\t: " << right << setw(10) << hero.lvl << endl;
 		cout << "    공격력\t: " << right << setw(10) << hero.attack << setw(20) << "공격력\t: " << setw(10) << monster.attack << endl;
 		cout << "    체  력\t: " << right << setw(10) << string(to_string(hero.hp) + " / " + to_string(hero.maxHP)) << setw(20) << " 체  력\t: " << setw(10) << string(to_string(monster.hp) + " / " + to_string(monster.maxHP)) << endl;
-		cout << "    경험치\t: " << right << setw(10) << hero.exp << endl;
-		cout << "    소지금\t: " << right << setw(10) << hero.gold << endl;
 		cout << "---------------------------------------------------------------------" << endl;
 	}
 };
 
 int main()
 {
-	Hero hero;
-	hero.CreateLightMap(10, 10);
-	hero.ResetLightMap();
-
 	/*
 		0-1 : type 1 10x10
 		2-3 : type 2 5x10
@@ -1155,10 +1196,10 @@ int main()
 	dungeonSet[0].fieldSet = new int* [dungeonSet[0].rows];
 	dungeonSet[0].fieldSet[0] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
 	dungeonSet[0].fieldSet[1] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 0, 0, 2, 1, 1 };
-	dungeonSet[0].fieldSet[2] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 0, 2, 2, 2, 1 };
-	dungeonSet[0].fieldSet[3] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 2, 2, 2, 0, 2 };
-	dungeonSet[0].fieldSet[4] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 0, 2, 0, 0, 0 };
-	dungeonSet[0].fieldSet[5] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 2, 2, 4, 0, 0 };
+	dungeonSet[0].fieldSet[2] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 3, 2, 2, 2, 1 };
+	dungeonSet[0].fieldSet[3] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 3, 2, 2, 2, 0, 2 };
+	dungeonSet[0].fieldSet[4] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 0, 3, 2, 0, 0, 0 };
+	dungeonSet[0].fieldSet[5] = new int[dungeonSet[0].cols]{ 0, 0, 3, 0, 0, 2, 2, 4, 0, 0 };
 	dungeonSet[0].fieldSet[6] = new int[dungeonSet[0].cols]{ 0, 0, 0, 1, 0, 1, 1, 2, 0, 0 };
 	dungeonSet[0].fieldSet[7] = new int[dungeonSet[0].cols]{ 0, 0, 1, 1, 0, 1, 1, 1, 2, 0 };
 	dungeonSet[0].fieldSet[8] = new int[dungeonSet[0].cols]{ 0, 0, 0, 0, 1, 0, 0, 1, 1, 2 };
@@ -1168,29 +1209,29 @@ int main()
 	dungeonSet[1].fieldSet = new int* [dungeonSet[1].rows];
 	dungeonSet[1].fieldSet[0] = new int[dungeonSet[1].cols]{ 0, 0, 0, 0, 0, 0, 0, 1, 1, 1 };
 	dungeonSet[1].fieldSet[1] = new int[dungeonSet[1].cols]{ 0, 0, 0, 0, 1, 1, 1, 1, 0, 0 };
-	dungeonSet[1].fieldSet[2] = new int[dungeonSet[1].cols]{ 0, 0, 0, 1, 1, 1, 0, 0, 0, 0 };
-	dungeonSet[1].fieldSet[3] = new int[dungeonSet[1].cols]{ 0, 0, 1, 1, 0, 0, 0, 0, 3, 0 };
+	dungeonSet[1].fieldSet[2] = new int[dungeonSet[1].cols]{ 0, 0, 0, 1, 1, 1, 0, 0, 3, 0 };
+	dungeonSet[1].fieldSet[3] = new int[dungeonSet[1].cols]{ 0, 0, 1, 1, 0, 0, 0, 3, 3, 0 };
 	dungeonSet[1].fieldSet[4] = new int[dungeonSet[1].cols]{ 0, 1, 1, 1, 0, 0, 0, 0, 0, 4 };
-	dungeonSet[1].fieldSet[5] = new int[dungeonSet[1].cols]{ 0, 1, 1, 1, 0, 0, 0, 0, 3, 0 };
-	dungeonSet[1].fieldSet[6] = new int[dungeonSet[1].cols]{ 0, 1, 1, 0, 3, 0, 3, 0, 0, 0 };
+	dungeonSet[1].fieldSet[5] = new int[dungeonSet[1].cols]{ 0, 1, 1, 1, 3, 0, 3, 3, 3, 0 };
+	dungeonSet[1].fieldSet[6] = new int[dungeonSet[1].cols]{ 0, 1, 1, 3, 3, 0, 3, 0, 0, 0 };
 	dungeonSet[1].fieldSet[7] = new int[dungeonSet[1].cols]{ 1, 1, 0, 0, 0, 4, 0, 0, 0, 0 };
-	dungeonSet[1].fieldSet[8] = new int[dungeonSet[1].cols]{ 0, 0, 0, 0, 3, 0, 3, 0, 0, 0 };
+	dungeonSet[1].fieldSet[8] = new int[dungeonSet[1].cols]{ 0, 0, 0, 3, 3, 0, 3, 0, 0, 0 };
 	dungeonSet[1].fieldSet[9] = new int[dungeonSet[1].cols]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 	dungeonSet[2] = { 5, 10 };
 	dungeonSet[2].fieldSet = new int*[dungeonSet[2].rows];
 	dungeonSet[2].fieldSet[0] = new int[dungeonSet[2].cols]{ 0, 0, 1, 1, 0, 0, 2, 2, 0, 0 };
 	dungeonSet[2].fieldSet[1] = new int[dungeonSet[2].cols]{ 0, 1, 1, 1, 1, 0, 2, 2, 2, 0 };
-	dungeonSet[2].fieldSet[2] = new int[dungeonSet[2].cols]{ 0, 0, 1, 1, 1, 0, 0, 0, 2, 2 };
+	dungeonSet[2].fieldSet[2] = new int[dungeonSet[2].cols]{ 0, 0, 1, 1, 1, 3, 0, 0, 2, 2 };
 	dungeonSet[2].fieldSet[3] = new int[dungeonSet[2].cols]{ 0, 0, 1, 1, 1, 0, 0, 0, 0, 2 };
 	dungeonSet[2].fieldSet[4] = new int[dungeonSet[2].cols]{ 0, 0, 0, 1, 0, 0, 0, 0, 0, 2 };
 
 	dungeonSet[3] = { 5, 10 };
 	dungeonSet[3].fieldSet = new int*[dungeonSet[3].rows];
 	dungeonSet[3].fieldSet[0] = new int[dungeonSet[3].cols]{ 0, 0, 0, 1, 1, 0, 0, 0, 0, 0 };
-	dungeonSet[3].fieldSet[1] = new int[dungeonSet[3].cols]{ 0, 0, 1, 1, 1, 0, 0, 0, 0, 0 };
-	dungeonSet[3].fieldSet[2] = new int[dungeonSet[3].cols]{ 0, 0, 1, 1, 0, 0, 0, 0, 1, 0 };
-	dungeonSet[3].fieldSet[3] = new int[dungeonSet[3].cols]{ 0, 1, 1, 1, 0, 0, 1, 1, 1, 0 };
+	dungeonSet[3].fieldSet[1] = new int[dungeonSet[3].cols]{ 0, 0, 1, 1, 1, 0, 3, 0, 0, 0 };
+	dungeonSet[3].fieldSet[2] = new int[dungeonSet[3].cols]{ 0, 0, 1, 1, 0, 3, 0, 0, 1, 0 };
+	dungeonSet[3].fieldSet[3] = new int[dungeonSet[3].cols]{ 0, 1, 1, 1, 3, 0, 1, 1, 1, 0 };
 	dungeonSet[3].fieldSet[4] = new int[dungeonSet[3].cols]{ 0, 0, 0, 1, 0, 1, 1, 1, 0, 0 };
 
 	dungeonSet[4] = { 10, 5 };
@@ -1221,11 +1262,11 @@ int main()
 
 	dungeonSet[6] = { 5, 5 };
 	dungeonSet[6].fieldSet = new int*[dungeonSet[6].rows];
-	dungeonSet[6].fieldSet[0] = new int[dungeonSet[6].cols]{ 0, 0, 0, 0, 0 };
+	dungeonSet[6].fieldSet[0] = new int[dungeonSet[6].cols]{ 0, 3, 0, 3, 0 };
 	dungeonSet[6].fieldSet[1] = new int[dungeonSet[6].cols]{ 0, 0, 2, 0, 0 };
 	dungeonSet[6].fieldSet[2] = new int[dungeonSet[6].cols]{ 0, 2, 2, 2, 0 };
 	dungeonSet[6].fieldSet[3] = new int[dungeonSet[6].cols]{ 0, 0, 2, 0, 0 };
-	dungeonSet[6].fieldSet[4] = new int[dungeonSet[6].cols]{ 0, 0, 0, 0, 0 };
+	dungeonSet[6].fieldSet[4] = new int[dungeonSet[6].cols]{ 0, 3, 0, 3, 0 };
 
 	dungeonSet[7] = { 5, 5 };
 	dungeonSet[7].fieldSet = new int*[dungeonSet[7].rows];
@@ -1246,9 +1287,9 @@ int main()
 	dungeonSet[9] = { 5, 5 };
 	dungeonSet[9].fieldSet = new int*[dungeonSet[9].rows];
 	dungeonSet[9].fieldSet[0] = new int[dungeonSet[9].cols]{ 0, 0, 1, 0, 0 };
-	dungeonSet[9].fieldSet[1] = new int[dungeonSet[9].cols]{ 0, 1, 0, 1, 0 };
-	dungeonSet[9].fieldSet[2] = new int[dungeonSet[9].cols]{ 1, 0, 4, 0, 1 };
-	dungeonSet[9].fieldSet[3] = new int[dungeonSet[9].cols]{ 0, 1, 0, 1, 0 };
+	dungeonSet[9].fieldSet[1] = new int[dungeonSet[9].cols]{ 0, 3, 3, 3, 0 };
+	dungeonSet[9].fieldSet[2] = new int[dungeonSet[9].cols]{ 1, 3, 4, 3, 1 };
+	dungeonSet[9].fieldSet[3] = new int[dungeonSet[9].cols]{ 0, 3, 3, 3, 0 };
 	dungeonSet[9].fieldSet[4] = new int[dungeonSet[9].cols]{ 0, 0, 1, 0, 0 };
 #pragma endregion
 
