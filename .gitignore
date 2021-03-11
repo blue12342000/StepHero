@@ -33,3 +33,9 @@
 
 # Folder
 .vs/
+x64/
+x86/
+[Dd]ebug/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
