@@ -38,13 +38,13 @@ int G_LVL_EXP_TABLE[15][2] = { {1, 10}
 
 struct TargetArgs
 {
-	bool isOrigin = false;
 	int size = 0;
 	void* args = nullptr;
 
-	void Release()
+	TargetArgs(int size, void* args)
 	{
-		if (!isOrigin) delete[] args;
+		this->size = size;
+		this->args = args;
 	}
 };
 
@@ -54,7 +54,11 @@ struct QuestNode
 	string name;
 	string desc;
 
-	void (*fnQuestClearAction)(void*, TargetArgs);
+	void* owner = nullptr;
+	TargetArgs args;
+
+	void (*QuestClear)(void*, TargetArgs) = nullptr;
+	void (*QuestFailed)(void*, TargetArgs) = nullptr;
 
 	// 선택퀘스트 - 본인과 같은 뎁스
 	QuestNode* firendQuset = nullptr;
@@ -304,6 +308,11 @@ struct Hero
 	}
 };
 
+void BBB(int, int, float)
+{
+
+}
+
 struct Region
 {
 	bool isUsed = false;
@@ -321,6 +330,70 @@ struct Dungeon
 	int noticeCount;
 	string notice[9];
 
+	Dungeon() { cout << " 생성됨 " << endl; }
+
+	struct LightNode
+	{
+		int posX = 0;
+		int posY = 0;
+		float bright = 0.f;
+
+		LightNode* next = nullptr;
+
+		LightNode(int x, int y, float bright) :posX(x), posY(y), bright(bright) {}
+	};
+
+	struct LightList
+	{
+		int size = 0;
+		LightNode* head = nullptr;
+
+		void PushBack(int x, int y, float bright)
+		{
+			if (!head)
+			{
+				size = 1;
+				head = new LightNode(x, y, bright);
+			}
+			else
+			{
+				++size;
+				LightNode* currLight = head;
+				while (currLight->next)
+				{
+					currLight = currLight->next;
+				}
+				currLight->next = new LightNode(x, y, bright);
+			}
+		}
+
+		void ForEachCallSetLightMap(Dungeon* dungeon)
+		{
+			if (head)
+			{
+				LightNode* currLight = head;
+				for (int i = 0; i < size; ++i, currLight = currLight->next)
+				{
+					dungeon->SetLightMap(currLight->posX, currLight->posY, currLight->bright);
+				}
+			}
+		}
+
+		void Release()
+		{
+			if (head)
+			{
+				LightNode* currLight = head;
+				for (int i = 0; i < size; ++i, currLight = currLight->next)
+				{
+					LightNode* nextLight = currLight->next;
+					delete currLight;
+					currLight = nextLight;
+				}
+			}
+		}
+	};
+	LightList lightList;
 	int** lightMap = nullptr;
 	Room** room = nullptr;
 
@@ -446,44 +519,44 @@ struct Dungeon
 			for (int j = 0; j < cols; j+=5)	// x축
 			{
 				if (region[i / 5][j / 5]->isUsed) continue;
-int templateNo = region[i / 5][j / 5]->templateNo;
+				int templateNo = region[i / 5][j / 5]->templateNo;
 
-if (region[i / 5][j / 5]->isFlip)
-{
-	for (int ty = i - (i / 5) * 5; ty < dungeonSet[templateNo].rows; ++ty)
-	{
-		for (int tx = j - (j / 5) * 5; tx < dungeonSet[templateNo].cols; ++tx)
-		{
-			if (room[i + ty][j + tx].fieldType != FieldType::out)
-			{
-				room[i + ty][j + tx].fieldType = (FieldType)dungeonSet[templateNo].fieldSet[ty][dungeonSet[templateNo].cols - 1 - tx];
-			}
-			if (room[i + ty][j + tx].fieldType == FieldType::fire)
-			{
-				SetLightMap(j + tx, i + ty, 2.5f);
-			}
-		}
-	}
-}
-else
-{
-	for (int ty = i - (i / 5) * 5; ty < dungeonSet[templateNo].rows; ++ty)
-	{
-		for (int tx = j - (j / 5) * 5; tx < dungeonSet[templateNo].cols; ++tx)
-		{
-			if (room[i + ty][j + tx].fieldType != FieldType::out)
-			{
-				room[i + ty][j + tx].fieldType = (FieldType)dungeonSet[templateNo].fieldSet[ty][tx];
-			}
+				if (region[i / 5][j / 5]->isFlip)
+				{
+					for (int ty = i - (i / 5) * 5; ty < dungeonSet[templateNo].rows; ++ty)
+					{
+						for (int tx = j - (j / 5) * 5; tx < dungeonSet[templateNo].cols; ++tx)
+						{
+							if (room[i + ty][j + tx].fieldType != FieldType::out)
+							{
+								room[i + ty][j + tx].fieldType = (FieldType)dungeonSet[templateNo].fieldSet[ty][dungeonSet[templateNo].cols - 1 - tx];
+							}
+							if (room[i + ty][j + tx].fieldType == FieldType::fire)
+							{
+								lightList.PushBack(j + tx, i + ty, 2.5f);
+							}
+						}
+					}
+				}
+				else
+				{
+					for (int ty = i - (i / 5) * 5; ty < dungeonSet[templateNo].rows; ++ty)
+					{
+						for (int tx = j - (j / 5) * 5; tx < dungeonSet[templateNo].cols; ++tx)
+						{
+							if (room[i + ty][j + tx].fieldType != FieldType::out)
+							{
+								room[i + ty][j + tx].fieldType = (FieldType)dungeonSet[templateNo].fieldSet[ty][tx];
+							}
 
-			if (room[i + ty][j + tx].fieldType == FieldType::fire)
-			{
-				SetLightMap(j + tx, i + ty, 2.5f);
-			}
-		}
-	}
-}
-region[i / 5][j / 5]->isUsed = true;
+							if (room[i + ty][j + tx].fieldType == FieldType::fire)
+							{
+								lightList.PushBack(j + tx, i + ty, 2.5f);
+							}
+						}
+					}
+				}
+				region[i / 5][j / 5]->isUsed = true;
 			}
 		}
 
@@ -496,6 +569,9 @@ region[i / 5][j / 5]->isUsed = true;
 				room[y][x].monster = nullptr;
 			}
 		}
+
+		lightList.ForEachCallSetLightMap(this);
+		lightList.Release();
 
 		// 리전 메모리 해제
 		for (int i = 0; i < regionRows; ++i)
@@ -799,10 +875,9 @@ region[i / 5][j / 5]->isUsed = true;
 		}
 #pragma endregion
 	}
-	void SetLightMap(int x, int y, float lightBright, bool isReset = false)
+	void SetLightMap(int x, int y, float lightBright)
 	{
 		if (!lightMap) CreateLightMap();
-		else if (isReset) ResetLightMap();
 
 		// 기본 라이트맵 생성 및 초기화
 		const int pX = x;
@@ -829,6 +904,21 @@ region[i / 5][j / 5]->isUsed = true;
 		}
 		tempLightMap[centerY][centerX] = 2;
 
+		for (int i = 0; i < tempListMapSize; ++i)
+		{
+			for (int j = 0; j < tempListMapSize; ++j)
+			{
+				int worldX = pX + j - centerX;
+				int worldY = pY + i - centerY;
+
+				if (worldX < 0 || worldY < 0 || worldX >= cols || worldY >= rows) cout << "9 ";
+				else cout << room[worldY][worldX].fieldType << " ";
+			}
+			cout << endl;
+		}
+
+		cout << "-----------------------" << endl;
+
 		/*
 			1. 플레이어의 위치에서 직선으로 상하좌우 확인
 			2. 1분면부터 4분면까지 남은 구역확인
@@ -836,13 +926,15 @@ region[i / 5][j / 5]->isUsed = true;
 		*/
 #pragma region Step.1
 		// 상
-		for (int dy = pY - 1; dy >= 0 && dy >= pY - pSight; --dy)
+		for (int dy = centerY - 1; dy >= 0; --dy)
 		{
-			int localX = centerX - (pX - pX);
-			int localY = centerY - (pY - dy);
+			int localX = centerX;
+			int localY = dy;
+			int worldY = pY + localY - centerY;
+
 
 			if (tempLightMap[localY][localX] == -1) break;
-			if (room[dy][pX].fieldType != FieldType::wall && room[dy][pX].fieldType != FieldType::fire) tempLightMap[localY][localX] = 2;
+			if (room[worldY][pX].fieldType != FieldType::wall && room[worldY][pX].fieldType != FieldType::fire) tempLightMap[localY][localX] = 2;
 			else
 			{
 				tempLightMap[localY][localX] = 1;
@@ -850,13 +942,14 @@ region[i / 5][j / 5]->isUsed = true;
 			}
 		}
 		// 하
-		for (int dy = pY + 1; dy < rows && dy <= pY + pSight; ++dy)
+		for (int dy = centerY + 1; dy < tempListMapSize; ++dy)
 		{
-			int localX = centerX - (pX - pX);
-			int localY = centerY - (pY - dy);
+			int localX = centerX;
+			int localY = dy;
+			int worldY = pY + localY - centerY;
 
 			if (tempLightMap[localY][localX] == -1) break;
-			if (room[dy][pX].fieldType != FieldType::wall && room[dy][pX].fieldType != FieldType::fire) tempLightMap[localY][localX] = 2;
+			if (room[worldY][pX].fieldType != FieldType::wall && room[worldY][pX].fieldType != FieldType::fire) tempLightMap[localY][localX] = 2;
 			else
 			{
 				tempLightMap[localY][localX] = 1;
@@ -864,13 +957,14 @@ region[i / 5][j / 5]->isUsed = true;
 			}
 		}
 		// 좌
-		for (int dx = pX - 1; dx >= 0 && dx >= pX - pSight; --dx)
+		for (int dx = centerX - 1; dx >= 0; --dx)
 		{
-			int localX = centerX - (pX - dx);
-			int localY = centerY - (pY - pY);
+			int localX = dx;
+			int localY = centerY;
+			int worldX = pX + localX - centerX;
 
 			if (tempLightMap[localY][localX] == -1) break;
-			if (room[pY][dx].fieldType != FieldType::wall && room[pY][dx].fieldType != FieldType::fire) tempLightMap[localY][localX] = 2;
+			if (room[pY][worldX].fieldType != FieldType::wall && room[pY][worldX].fieldType != FieldType::fire) tempLightMap[localY][localX] = 2;
 			else
 			{
 				tempLightMap[localY][localX] = 1;
@@ -878,13 +972,14 @@ region[i / 5][j / 5]->isUsed = true;
 			}
 		}
 		// 우
-		for (int dx = pX + 1; dx < cols && dx <= pX + pSight; ++dx)
+		for (int dx = centerX + 1; dx < tempListMapSize; ++dx)
 		{
-			int localX = centerX - (pX - dx);
-			int localY = centerY - (pY - pY);
+			int localX = dx;
+			int localY = centerY;
+			int worldX = pX + localX - centerX;
 
 			if (tempLightMap[localY][localX] == -1) break;
-			if (room[pY][dx].fieldType != FieldType::wall && room[pY][dx].fieldType != FieldType::fire) tempLightMap[localY][localX] = 2;
+			if (room[pY][worldX].fieldType != FieldType::wall && room[pY][worldX].fieldType != FieldType::fire) tempLightMap[localY][localX] = 2;
 			else
 			{
 				tempLightMap[localY][localX] = 1;
@@ -892,6 +987,30 @@ region[i / 5][j / 5]->isUsed = true;
 			}
 		}
 #pragma endregion
+
+		for (int i = 0; i < tempListMapSize; ++i)
+		{
+			for (int j = 0; j < tempListMapSize; ++j)
+			{
+				int worldX = pX + j - centerX;
+				int worldY = pY + i - centerY;
+
+				if (worldX < 0 || worldY < 0 || worldX >= cols || worldY >= rows) cout << "9 ";
+				else cout << room[worldY][worldX].fieldType << " ";
+			}
+			cout << endl;
+		}
+
+		cout << "-----------------------" << endl;
+
+		for (int i = 0; i < tempListMapSize; ++i)
+		{
+			for (int j = 0; j < tempListMapSize; ++j)
+			{
+				cout << tempLightMap[i][j] << " ";
+			}
+			cout << endl;
+		}
 
 #pragma region Step.2
 		int targetX, targetY, deltaX, deltaY;
@@ -1211,10 +1330,10 @@ int main()
 	dungeonSet[1].fieldSet[1] = new int[dungeonSet[1].cols]{ 0, 0, 0, 0, 1, 1, 1, 1, 0, 0 };
 	dungeonSet[1].fieldSet[2] = new int[dungeonSet[1].cols]{ 0, 0, 0, 1, 1, 1, 0, 0, 3, 0 };
 	dungeonSet[1].fieldSet[3] = new int[dungeonSet[1].cols]{ 0, 0, 1, 1, 0, 0, 0, 3, 3, 0 };
-	dungeonSet[1].fieldSet[4] = new int[dungeonSet[1].cols]{ 0, 1, 1, 1, 0, 0, 0, 0, 0, 4 };
-	dungeonSet[1].fieldSet[5] = new int[dungeonSet[1].cols]{ 0, 1, 1, 1, 3, 0, 3, 3, 3, 0 };
+	dungeonSet[1].fieldSet[4] = new int[dungeonSet[1].cols]{ 0, 1, 1, 1, 0, 0, 0, 0, 0, 0 };
+	dungeonSet[1].fieldSet[5] = new int[dungeonSet[1].cols]{ 0, 1, 1, 1, 3, 0, 4, 3, 3, 0 };
 	dungeonSet[1].fieldSet[6] = new int[dungeonSet[1].cols]{ 0, 1, 1, 3, 3, 0, 3, 0, 0, 0 };
-	dungeonSet[1].fieldSet[7] = new int[dungeonSet[1].cols]{ 1, 1, 0, 0, 0, 4, 0, 0, 0, 0 };
+	dungeonSet[1].fieldSet[7] = new int[dungeonSet[1].cols]{ 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
 	dungeonSet[1].fieldSet[8] = new int[dungeonSet[1].cols]{ 0, 0, 0, 3, 3, 0, 3, 0, 0, 0 };
 	dungeonSet[1].fieldSet[9] = new int[dungeonSet[1].cols]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -1270,11 +1389,11 @@ int main()
 
 	dungeonSet[7] = { 5, 5 };
 	dungeonSet[7].fieldSet = new int*[dungeonSet[7].rows];
-	dungeonSet[7].fieldSet[0] = new int[dungeonSet[7].cols]{ 0, 0, 0, 4, 0 };
-	dungeonSet[7].fieldSet[1] = new int[dungeonSet[7].cols]{ 4, 3, 0, 3, 0 };
-	dungeonSet[7].fieldSet[2] = new int[dungeonSet[7].cols]{ 0, 0, 1, 0, 0 };
-	dungeonSet[7].fieldSet[3] = new int[dungeonSet[7].cols]{ 0, 3, 0, 3, 4 };
-	dungeonSet[7].fieldSet[4] = new int[dungeonSet[7].cols]{ 0, 4, 0, 0, 0 };
+	dungeonSet[7].fieldSet[0] = new int[dungeonSet[7].cols]{ 0, 0, 3, 3, 0 };
+	dungeonSet[7].fieldSet[1] = new int[dungeonSet[7].cols]{ 3, 0, 0, 0, 0 };
+	dungeonSet[7].fieldSet[2] = new int[dungeonSet[7].cols]{ 3, 0, 4, 0, 3 };
+	dungeonSet[7].fieldSet[3] = new int[dungeonSet[7].cols]{ 0, 0, 0, 0, 3 };
+	dungeonSet[7].fieldSet[4] = new int[dungeonSet[7].cols]{ 0, 3, 3, 0, 0 };
 
 	dungeonSet[8] = { 5, 5 };
 	dungeonSet[8].fieldSet = new int*[dungeonSet[8].rows];
@@ -1287,9 +1406,9 @@ int main()
 	dungeonSet[9] = { 5, 5 };
 	dungeonSet[9].fieldSet = new int*[dungeonSet[9].rows];
 	dungeonSet[9].fieldSet[0] = new int[dungeonSet[9].cols]{ 0, 0, 1, 0, 0 };
-	dungeonSet[9].fieldSet[1] = new int[dungeonSet[9].cols]{ 0, 3, 3, 3, 0 };
-	dungeonSet[9].fieldSet[2] = new int[dungeonSet[9].cols]{ 1, 3, 4, 3, 1 };
-	dungeonSet[9].fieldSet[3] = new int[dungeonSet[9].cols]{ 0, 3, 3, 3, 0 };
+	dungeonSet[9].fieldSet[1] = new int[dungeonSet[9].cols]{ 0, 3, 0, 3, 0 };
+	dungeonSet[9].fieldSet[2] = new int[dungeonSet[9].cols]{ 1, 0, 4, 0, 1 };
+	dungeonSet[9].fieldSet[3] = new int[dungeonSet[9].cols]{ 0, 3, 0, 3, 0 };
 	dungeonSet[9].fieldSet[4] = new int[dungeonSet[9].cols]{ 0, 0, 1, 0, 0 };
 #pragma endregion
 
@@ -1590,10 +1709,10 @@ int main()
 					cout << ":::: 몬스터와의 전투에서 승리하였다" << endl;
 					if (monster.HitDamage(player.attack) == 1)
 					{
+						// 죽었는가?
 						cout << ":::: " << monster.rootExp << " 경험치 획득!!" << endl;
 						cout << ":::: " << monster.rootGold << " 골드 획득!!" << endl;
 	
-						// 죽었는가?
 						player.gold += monster.rootGold;
 						int lvlUp = player.RootExp(monster.rootExp);
 						if (lvlUp)
