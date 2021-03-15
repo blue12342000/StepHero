@@ -8,6 +8,7 @@
 #include <ctime>
 #include <conio.h>
 #include <stdio.h>
+#include <map>
 #include <functional>
 
 using namespace std;
@@ -17,8 +18,8 @@ using FunctionPtr = function<void(void*)>;
 char G_CHAR_FIELD_TYPE[6] = {'.', 'T', '~', '#', 'A', 'E'};
 enum FieldType { empty=0, wood, swamp, wall, fire, out, eof};
 enum HeroState { IDLE = 0, BATTLE, SHOP, DIE };
+
 enum QusetType { HUNT, MOVE, ETC };
-enum TargetType { HERO, NONE };
 
 // 레벨별 경험치 테이블
 int G_MAX_LEVEL = 15;
@@ -38,18 +39,293 @@ int G_LVL_EXP_TABLE[15][2] = { {1, 10}
 							  ,{14, 50}
 							  ,{15, 50} };
 
-struct TargetArgs
+struct InputKeyRequest
 {
 	int size = 0;
-	(void*) args = nullptr;
+	char* keyGroup = nullptr;
 
-	TargetArgs() {}
-	TargetArgs(int size, void* args)
+	InputKeyRequest() {}
+	InputKeyRequest(int size, char* keyGroup) :size(size), keyGroup(keyGroup) {}
+
+	void Release()
 	{
-		this->size = size;
-		this->args = args;
+		if (keyGroup) delete[] keyGroup;
 	}
 };
+
+struct InputKey
+{
+	enum InputType
+	{
+		ANYKEYS = 0, SELECT, INGAME, NONE
+	};
+
+	enum InputResult
+	{
+		SUCCESS = 0, FAIL, EMPTY
+	};
+
+	char keys[256];
+	InputResult inputResult = InputResult::EMPTY;
+	InputKeyRequest inputKeyRequest[InputType::NONE];
+
+	int currRequest = 0;
+	int requestCount = 0;
+	InputType requestBuffer[5];
+
+	InputKey()
+	{
+		inputKeyRequest[InputType::SELECT] = InputKeyRequest(3, new char[3]{ 'w', 's', 13 });
+		inputKeyRequest[InputType::INGAME] = InputKeyRequest(5, new char[5]{ 'w', 'a', 's', 'd', 13 });
+	}
+
+	void Requset(InputType inputType)
+	{
+		requestBuffer[(currRequest + requestCount + 1) % 5] = inputType;
+		++requestCount;
+	}
+
+	void Clear()
+	{
+		currRequest = 0;
+		requestCount = 0;
+	}
+
+	void Update()
+	{
+		inputResult = InputResult::EMPTY;
+		if (requestCount > 0)
+		{
+			bool isOK = false;
+			char inputChar = _getch();
+			if (_kbhit()) _getch();
+			switch (requestBuffer[currRequest])
+			{
+			case InputType::ANYKEYS:
+				isOK = true;
+				break;
+			case InputType::SELECT:
+			case InputType::INGAME:
+				for (int i = 0; i < inputKeyRequest[requestBuffer[currRequest]].size; ++i)
+				{
+					if (inputChar == inputKeyRequest[requestBuffer[currRequest]].keyGroup[i])
+					{
+						isOK = true;
+					}
+				}
+				break;
+			}
+
+			inputResult = InputResult::FAIL;
+			if (isOK)
+			{
+				inputResult = InputResult::SUCCESS;
+				currRequest = (currRequest + 1) % 5;
+				--requestCount;
+			}
+		}
+	}
+
+} gInputKey;
+
+struct TextBuffer
+{
+	enum TextAlign
+	{
+		LEFT, CENTER, RIGHT
+	};
+
+	bool isRefreshed = false;
+	TextAlign textAlign = TextAlign::LEFT;
+
+	int offset = 0;
+	int rows = 0;
+	int cols = 0;
+
+	int currPeek = 0;
+	int dataCount = 0;
+	int lastRenderLine = 0;
+	string buffer[100];
+	
+	TextBuffer() {}
+	TextBuffer(TextAlign align, int offset, int rows, int cols, bool isRefreshed):textAlign(align), offset(offset), rows(rows), cols(cols), isRefreshed(isRefreshed){}
+
+	string* GetLine(int readPeek)
+	{
+		int localY = readPeek - offset;
+		if (localY < 0 || localY >= dataCount) return nullptr;
+		lastRenderLine = localY;
+		return &buffer[(currPeek + localY) % 100];
+	}
+
+	void Refresh()
+	{
+		if (!isRefreshed)
+		{
+			currPeek = (currPeek + lastRenderLine + 1) % 100;
+			dataCount -= lastRenderLine;
+		}
+	}
+
+	void PushBack(string str)
+	{
+		buffer[currPeek + dataCount] = string(cols, ' ');
+
+		int size = (str.length() < cols) ? str.length() : cols;
+		int begin = 0;
+		switch (textAlign)
+		{
+		case TextAlign::LEFT:
+			break;
+		case TextAlign::CENTER:
+			begin = (cols - size) / 2;
+			break;
+		case TextAlign::RIGHT:
+			begin = cols - size;
+			break;
+		}
+		buffer[currPeek + dataCount].replace(begin, size, str);
+		++dataCount;
+	}
+
+	void Release()
+	{
+
+	}
+};
+
+struct TextLayout
+{
+	enum LayoutKind
+	{
+		TITLE = 0, INGAME, NONE
+	};
+
+	enum LayoutPos
+	{
+		TOP = 0, CONTENT, BOTTOM
+	};
+
+	int size = 0;
+
+	TextBuffer** textBufferTree = nullptr;
+	map<LayoutPos, TextBuffer> textBufferMap;
+
+	TextLayout() {}
+
+	void Initialize(LayoutKind layoutKind)
+	{
+		switch (layoutKind)
+		{
+		case LayoutKind::TITLE:
+
+			textBufferMap.insert(make_pair(LayoutPos::TOP, TextBuffer(TextBuffer::TextAlign::CENTER, 0, 16, 100, false)));
+			textBufferMap.insert(make_pair(LayoutPos::CONTENT, TextBuffer(TextBuffer::TextAlign::CENTER, 16, 34, 100, false)));
+
+			textBufferTree = new TextBuffer*[2]{ &textBufferMap[LayoutPos::TOP], &textBufferMap[LayoutPos::CONTENT] };
+			size = 2;
+			break;
+		case LayoutKind::INGAME:
+			break;
+		}
+	}
+
+	void Refresh()
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			textBufferTree[i]->Refresh();
+		}
+	}
+
+	string GetLine(int readPeek)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			if (textBufferTree[i]->offset <= readPeek && readPeek < textBufferTree[i]->offset + textBufferTree[i]->rows)
+			{
+				string* line = textBufferTree[i]->GetLine(readPeek);
+				if (line) return *line;
+			}
+		}
+		return "";
+	}
+
+	void Release()
+	{
+		delete[] textBufferTree;
+		for (auto p : textBufferMap)
+		{
+			p.second.Release();
+		}
+	}
+};
+
+struct TextRender
+{
+	int rows;
+	int cols;
+
+	string* buffer = nullptr;
+
+	TextLayout* textLayout = nullptr;
+
+	TextRender() {}
+	TextRender(int rows, int cols) :rows(rows), cols(cols)
+	{
+		system(string("MODE CON COLS=" + to_string(cols+1) + " LINES=" + to_string(rows+1)).c_str());
+		buffer = new string[rows];
+		BufferClear();
+
+		textLayout = new TextLayout[TextLayout::LayoutKind::NONE];
+		for (int i = 0; i < TextLayout::LayoutKind::NONE; ++i)
+		{
+			textLayout[i].Initialize((TextLayout::LayoutKind)i);
+		}
+	}
+
+	void BufferClear()
+	{
+		for (int i = 0; i < rows; ++i)
+		{
+			buffer[i] = string(cols, '-');
+		}
+	}
+	void BufferClear(int startOffset, int lines)
+	{
+		for (int i = startOffset; i < lines && i < rows; ++i)
+		{
+			buffer[i] = string(cols, ' ');
+		}
+	}
+
+	void AppendBuffer(TextLayout::LayoutKind layoutKind, TextLayout::LayoutPos layoutPos, string str)
+	{
+		textLayout[layoutKind].textBufferMap[layoutPos].PushBack(str);
+	}
+
+	void Refresh(TextLayout::LayoutKind layoutKind)
+	{
+		textLayout[layoutKind].Refresh();
+	}
+
+	void Render(TextLayout::LayoutKind layoutKind)
+	{
+		for (int i = 0; i < rows; ++i)
+		{
+			buffer[i].replace(0, cols, textLayout[layoutKind].GetLine(i));
+			cout << buffer[i] << endl;
+		}
+	}
+
+	void Release()
+	{
+		for (int i = 0; i < TextLayout::LayoutKind::NONE; ++i) textLayout[i].Release();
+		delete[] textLayout;
+		delete[] buffer;
+	}
+
+} gTextRender(50, 100);
 
 struct QuestNode
 {
@@ -58,13 +334,12 @@ struct QuestNode
 	string desc;
 
 	void* owner = nullptr;
-	TargetArgs args;
 
 	FunctionPtr QuestClear = nullptr;
-	void (*QuestFailed)(void) = nullptr;
+	FunctionPtr QuestFailed = nullptr;
 
 	QuestNode() {}
-	QuestNode(int id, string name, string desc, FunctionPtr fnQusetClear, void(*FnQusetFailed)(void)):id(id),name(name),desc(desc), QuestClear(fnQusetClear), QuestFailed(FnQusetFailed) { }
+	QuestNode(int id, string name, string desc, FunctionPtr fnQuestClear, FunctionPtr fnQuestFailed):id(id),name(name),desc(desc), QuestClear(fnQuestClear), QuestFailed(fnQuestFailed) { }
 
 	// 선택퀘스트 - 본인과 같은 뎁스
 	QuestNode* firendQuset = nullptr;
@@ -247,6 +522,12 @@ struct Hero
 		return lvlUp;
 	}
 
+	int RootGold(int rootGold)
+	{
+		gold += rootGold;
+		return gold;
+	}
+
 	int HitDamage(int damage)
 	{
 		hp -= damage;
@@ -334,8 +615,6 @@ struct Dungeon
 
 	int noticeCount;
 	string notice[9];
-
-	Dungeon() { cout << " 생성됨 " << endl; }
 
 	struct LightNode
 	{
@@ -1255,6 +1534,32 @@ struct Dungeon
 		cout << "   " << setfill('=') << setw(cols * 2 + 3) << "" << endl;
 		cout.copyfmt(std::ios(NULL));
 	}
+	void Render(Hero* player, bool isDebug = false)
+	{
+		SetLightMap(player);
+
+		cout << "   " << setfill('=') << setw((cols * 2 + 3)) << "" << endl;
+		cout.copyfmt(std::ios(NULL));
+		for (int i = 0; i < rows; i++)		// y축
+		{
+			cout << "   : ";
+			for (int j = 0; j < cols; j++)	// x축
+			{
+				if (player->lightMap[i][j] || lightMap[i][j])
+				{
+					if (player && i == player->posY && j == player->posX) cout << "O ";
+					else if ((room[i][j].monster || room[i][j].isMonster) && !isDebug) cout << "M ";
+					else cout << G_CHAR_FIELD_TYPE[room[i][j].fieldType] << " ";
+				}
+				else cout << "  ";
+			}
+			cout << ":\t    ";
+			if (i > 0 && i <= noticeCount) cout << notice[i - 1] << endl;
+			else cout << endl;
+		}
+		cout << "   " << setfill('=') << setw(cols * 2 + 3) << "" << endl;
+		cout.copyfmt(std::ios(NULL));
+	}
 
 	void Release()
 	{
@@ -1302,8 +1607,106 @@ struct BattleInfo
 	}
 };
 
+struct StepHero
+{
+	enum GameState
+	{
+		TITLE = 0, INGAME, BATTLE, SHOP, ENDING
+	};
+
+	GameState gameState = GameState::TITLE;
+	Difficulty difficulty;
+	Hero* player = nullptr;
+	Shop* shop = nullptr;
+	Dungeon* dungeon = nullptr;
+
+	void Init()
+	{
+		gTextRender = TextRender(100, 50);
+	}
+
+	void Update()
+	{
+		switch (gameState)
+		{
+		case GameState::TITLE:
+
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      ----------------------------------------------------------     ");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####  #####  #####  #####      #   #  #####  #####  #####     ");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #        #    #      #   #      #   #  #      #   #  #   #     ");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####    #    ###    #####      #####  ###    #####  #   #     ");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      # #    #   #     ");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      #  #   #   #     ");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####    #    #####  #          #   #  #####  #   #  #####     ");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "     -----------------------------------------------------------     ");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+
+
+
+			break;
+		case GameState::INGAME:
+		case GameState::BATTLE:
+
+			break;
+		case GameState::SHOP:
+			break;
+		}
+	}
+
+	void Render()
+	{
+		switch (gameState)
+		{
+		case GameState::TITLE:
+			gTextRender.Render(TextLayout::LayoutKind::TITLE);
+			break;
+		case GameState::INGAME:
+		case GameState::BATTLE:
+
+			break;
+		case GameState::SHOP:
+			break;
+		}
+	}
+
+	void Release()
+	{
+		gTextRender.Release();
+	}
+};
+
 int main()
 {
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      ----------------------------------------------------------     ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####  #####  #####  #####      #   #  #####  #####  #####     ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #        #    #      #   #      #   #  #      #   #  #   #     ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####    #    ###    #####      #####  ###    #####  #   #     ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      # #    #   #     ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      #  #   #   #     ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####    #    #####  #          #   #  #####  #   #  #####     ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "     -----------------------------------------------------------     ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+
+	gTextRender.Render(TextLayout::LayoutKind::TITLE);
+	gInputKey.Requset(InputKey::InputType::ANYKEYS);
+	gInputKey.Requset(InputKey::InputType::SELECT);
+	gInputKey.Requset(InputKey::InputType::INGAME);
+	while (1)
+	{
+		gInputKey.Update();
+		cout << gInputKey.inputResult << endl;
+	}
+
 	/*
 		0-1 : type 1 10x10
 		2-3 : type 2 5x10
@@ -1415,562 +1818,564 @@ int main()
 	gDungeonSet[9].fieldSet[4] = new int[gDungeonSet[9].cols]{ 0, 0, 1, 0, 0 };
 #pragma endregion
 
-	
-
-	srand(time(NULL));
-	
-	system("MODE CON COLS=100 LINES=50");
-	
-	// 난이도 정보
-	Difficulty difficulty;
-	int difficultyInput = 0;
-	bool isUseShop = false;
-	int isMonsterMove = 0;
-	Hero player;
-	Dungeon dungeon;
-	dungeon.notice[0] = "* 던전에서 탈출에 성공하세요 *";
-	dungeon.notice[1] = "";
-	dungeon.notice[2] = "  O : 플레이어";
-	dungeon.notice[3] = "  E : 탈출구";
-	dungeon.notice[4] = "  . : 공터, T : 숲, ~ : 늪";
-	dungeon.notice[5] = "  # : 벽, A : 햇불";
-	dungeon.notice[6] = "";
-	dungeon.notice[7] = "  P : 몬스터위치 확인";
-	dungeon.notice[8] = "  M : 소지금 1000골드 UP";
-	dungeon.noticeCount = 9;
-	
-	// 맵 디버그 모드
-	bool debug = false;
-	
-	// 타이틀
-	bool isInitalized = false;
-	int initalizeStep = 0;
-	while (!isInitalized)
-	{
-		system("cls");
-	
-		cout << "\n\n\n";
-		cout << "      ----------------------------------------------------------     " << endl;
-		cout << "---------------------------------------------------------------------" << endl;
-		cout << "      #####  #####  #####  #####      #   #  #####  #####  #####     " << endl;
-		cout << "      #        #    #      #   #      #   #  #      #   #  #   #     " << endl;
-		cout << "      #####    #    ###    #####      #####  ###    #####  #   #     " << endl;
-		cout << "          #    #    #      #          #   #  #      # #    #   #     " << endl;
-		cout << "          #    #    #      #          #   #  #      #  #   #   #     " << endl;
-		cout << "      #####    #    #####  #          #   #  #####  #   #  #####     " << endl;
-		cout << "---------------------------------------------------------------------" << endl;
-		cout << "     -----------------------------------------------------------     " << endl;
-		cout << "\n\n";
-		
-		cout << "                                ------                               " << endl;
-		cout << "                              ----  ----                             " << endl;
-		cout << "                                                                     " << endl;
-	
-		cout << right << setw(35 + difficulty.name[difficultyInput].length() / 2) << difficulty.name[difficultyInput] << endl;
-		
-		if (initalizeStep == 0)
-		{
-			cout << "                                                                     " << endl;
-			cout << "                    CHANGE :: W,S  SELECT :: ENTER                   " << endl;
-		}
-		cout << "                                                                     " << endl;
-		cout << "                              ----  ----                             " << endl;
-		cout << "                                ------                               " << endl;
-	
-		if (initalizeStep == 0)
-		{
-			switch (_getch())
-			{
-			case 'w':
-			case 'W':
-				difficultyInput = (difficultyInput + 2) % 3;
-				break;
-			case 's':
-			case 'S':
-				difficultyInput = (difficultyInput + 1) % 3;
-				break;
-			case 13:
-				++initalizeStep;
-	
-				// 플레이어의 난이도별 능력치 설정
-				dungeon.rows = difficulty.dungeonSize[difficultyInput];
-				dungeon.cols = difficulty.dungeonSize[difficultyInput];
-				player = { difficulty.heroHP[difficultyInput], difficulty.heroHP[difficultyInput], 1000, 0, 0, 25, 1, 0, 3.5f };
-				break;
-			case 27:
-				// ESC 입력 게임종료;
-				return 0;
-				break;
-			default:
-				if (_kbhit())
-				{
-					_getch();
-					cout << ":::::  ERROR  :::::" << endl;
-					cout << ":::::  입력이 잘못되었습니다.  :::::" << endl;
-					cout << ":::::  만약 한글로 되어있다면 한/영키로 영어로 바꿔주세요  :::::" << endl;
-					_getch();
-				}
-				break;
-			}
-		}
-		else
-		{
-			// 영웅의 이름을 입력해주세요.
-			cout << "\n               영웅의 이름을 입력해주세요. :: ";
-			cin >> player.name;
-	
-			// 초기정보 입력 끝
-			isInitalized = true;
-
-			gQusetTable.questNode[0] = QuestNode(1, "이동해보세요", "W A S D 를 이용해서 이동해보세요", [](void* obj) { ((Hero*)obj)->RootExp(10); }, nullptr);
-		}
-	}
-	
-	// 상점의 정보
-	Shop shop;
-	shop.items[0] = { 100, 999, 5, "전체회복" };
-	shop.items[1] = { 10, 10, 10, "10회복" };
-	shop.items[2] = { 20, 20, 20, "20회복" };
-	shop.items[3] = { 30, 30, 30, "30회복" };
-	shop.items[4] = { 40, 40, 40, "40회복" };
-	
-	// 배틀정보
-	BattleInfo battleInfo;
-	battleInfo.item[0] = { "가위" };
-	battleInfo.item[1] = { "바위" };
-	battleInfo.item[2] = { " 보 " };
-	
-	// 몬스터 설정
-	MonsterTable monsterTable;
-	int mStrength = difficulty.monsterStrength[difficultyInput];
-	
-	// 0: 땅, 1: 숲, 2: 늪, 3: 벽, 4: 탈출구
-	monsterTable.monster[FieldType::empty][0] = { 10 * mStrength, 10 * mStrength, 10 * mStrength, 20, 30, 0, "두더지" };
-	monsterTable.monster[FieldType::empty][1] = { 12 * mStrength, 20 * mStrength, 20 * mStrength, 25, 50, 0, "슬라임" };
-	monsterTable.monster[FieldType::empty][2] = { 14 * mStrength, 30 * mStrength, 30 * mStrength, 30, 80, 0, "도적" };
-	monsterTable.monster[FieldType::empty][3] = { 16 * mStrength, 40 * mStrength, 40 * mStrength, 35, 100, 0, "산적" };
-	
-	monsterTable.monster[FieldType::wood][0] = { 10 * mStrength, 10 * mStrength, 10 * mStrength, 20, 30, 0, "토끼" };
-	monsterTable.monster[FieldType::wood][1] = { 12 * mStrength, 20 * mStrength, 20 * mStrength, 25, 50, 0, "사슴" };
-	monsterTable.monster[FieldType::wood][2] = { 14 * mStrength, 30 * mStrength, 30 * mStrength, 30, 80, 0, "늑대" };
-	monsterTable.monster[FieldType::wood][3] = { 16 * mStrength, 40 * mStrength, 40 * mStrength, 35, 100, 0, "늑대인간" };
-	
-	monsterTable.monster[FieldType::swamp][0] = { 10 * mStrength, 10 * mStrength, 10 * mStrength, 20, 30, 0, "두꺼비" };
-	monsterTable.monster[FieldType::swamp][1] = { 12 * mStrength, 20 * mStrength, 20 * mStrength, 25, 50, 0, "뱀" };
-	monsterTable.monster[FieldType::swamp][2] = { 14 * mStrength, 30 * mStrength, 30 * mStrength, 30, 80, 0, "저주받은 나무" };
-	monsterTable.monster[FieldType::swamp][3] = { 16 * mStrength, 40 * mStrength, 40 * mStrength, 35, 100, 0, "식인식물" };
-	
-	dungeon.CreateDungeon(difficulty.dungeonSize[difficultyInput], difficultyInput);
-	dungeon.SetMonsters(difficulty.monsterEncounter[difficultyInput], &player);
-	
-	while (1)
-	{
-		system("cls");
-	
-		// 맵 출력
-		cout << "---------------------------------------------------------------------" << endl;
-		cout << "      #####  #####  #####  #####      #   #  #####  #####  #####     " << endl;
-		cout << "      #        #    #      #   #      #   #  #      #   #  #   #     " << endl;
-		cout << "      #####    #    ###    #####      #####  ###    #####  #   #     " << endl;
-		cout << "          #    #    #      #          #   #  #      # #    #   #     " << endl;
-		cout << "          #    #    #      #          #   #  #      #  #   #   #     " << endl;
-		cout << "      #####    #    #####  #          #   #  #####  #   #  #####     " << endl;
-		cout << "---------------------------------------------------------------------" << endl;
-		dungeon.PrintDungeon(&player, debug);
-	
-		if (dungeon.room[player.posY][player.posX].fieldType == FieldType::out)
-		{
-			// 탈출
-			cout << "---------------------------------------------------------------------" << endl;
-			cout << "     #####     #####      #####         #        #####     #####     " << endl;
-			cout << "     #         #          #            # #       #   #     #         " << endl;
-			cout << "     ###       #####      #           #   #      #####     ###       " << endl;
-			cout << "     #             #      #           #####      #         #         " << endl;
-			cout << "     #             #      #           #   #      #         #         " << endl;
-			cout << "     #####     #####      #####       #   #      #         #####     " << endl;
-			cout << "---------------------------------------------------------------------" << endl;
-			break;
-		}
-		/*
-		else if (player.state == HeroState::IDLE && dungeon.room[player.posY][player.posX].monster)
-		{
-			// 현재 사용하지 않는 전투
-			player.state = 1;
-	
-			// 몬스터가 있는 위치에 들어옴
-			Monster& monster = *(dungeon.room[player.posY][player.posX].monster);
-			battleInfo.PrintBattleStatus(player, monster);
-			cout << right << setw(53) << "******* 몬스터와 조우하였다!! *******" << endl << endl;
-			int playerInput = rand() % 3;
-			int monsterInput = rand() % 3;
-			string playerBattleLogStr = player.name + " [[ " + battleInfo.item[playerInput].name + " ]]";
-			string monsterBattleLogStr = "[[ " + battleInfo.item[monsterInput].name + " ]] " + monster.name;
-	
-			cout << right << setw(45) << "*** 가위! 바위! 보! ***" << endl;
-			while (playerInput == monsterInput)
-			{
-				// 무승부 처리
-				cout << right << setw(31) << playerBattleLogStr << "  VS  " << monsterBattleLogStr << endl;
-				cout << right << setw(42) << "*** 무 승 부 ***" << endl;
-				
-				playerInput = rand() % 3;
-				monsterInput = rand() % 3;
-				playerBattleLogStr = player.name + " [[ " + battleInfo.item[playerInput].name + " ]]";
-				monsterBattleLogStr = "[[ " + battleInfo.item[monsterInput].name + " ]] " + monster.name;
-			}
-	
-			cout << right << setw(31) << playerBattleLogStr << "  VS  " << monsterBattleLogStr << endl;
-			if (playerInput == (monsterInput + 1) % 3)
-			{
-				// 승리 처리
-				cout << right << setw(42) << "***  승  리  ***" << endl;
-				cout << "---------------------------------------------------------------------" << endl;
-				cout << ":::: 몬스터와의 전투에서 승리하였다" << endl;
-				if (monster.HitDamage(player.attack) == 1)
-				{
-					cout << ":::: " << monster.rootExp << " 경험치 획득!!" << endl;
-					cout << ":::: " << monster.rootGold << " 골드 획득!!" << endl;
-	
-					// 죽었는가?
-					player.gold += monster.rootGold;
-					int lvlUp = player.RootExp(monster.rootExp);
-					if (lvlUp)
-					{
-						cout << ":::: 플레이어 레벨이 " << lvlUp << " 올랐습니다." << endl;
-					}
-	
-					delete &monster;
-					dungeon.room[player.posY][player.posX].monster = nullptr;
-				}
-				else
-				{
-					cout << ":::: 몬스터에게 " << player.attack << " 데미지를 주었다." << endl;
-					cout << ":::: 몬스터가 도망갔습니다." << endl;
-				}
-			}
-			else
-			{
-				// 패배 처리
-				cout << right << setw(42) << "***  패  배  ***" << endl;
-				cout << "---------------------------------------------------------------------" << endl;
-				cout << ":::: 몬스터와의 전투에서 패배하였다" << endl;
-				cout << ":::: " << monster.attack << "의 데미지를 받았다!!" << endl;
-	
-				// 플레이어의 상태가 죽은상태인가?
-				if (player.HitDamage(monster.attack) == 3)
-				{
-					cout << "---------------------------------------------------------------------" << endl;
-					cout << "        #   #    ###    #     #       #####    #####   #####         " << endl;
-					cout << "        #   #   #   #   #     #       #    #     #     #             " << endl;
-					cout << "         # #   #     #  #     #       #     #    #     ###           " << endl;
-					cout << "          #    #     #  #     #       #     #    #     #             " << endl;
-					cout << "          #     #   #   #     #       #    #     #     #             " << endl;
-					cout << "          #      ###     #####        #####    #####   #####         " << endl;
-					cout << "---------------------------------------------------------------------" << endl;
-					break;
-				}
-			}
-	
-			cout << "---------------------------------------------------------------------" << endl;
-			cout << ":::: 상점을 이용하시겠습니까? ( 0. 이용하지 않는다 / 1 : 이용한다 ) : ";
-			cin >> isUseShop;
-		}
-		*/
-		else if (player.state == HeroState::IDLE && dungeon.room[player.posY][player.posX].isMonster)
-		{
-			// 현재 사용하지 않는 전투
-			player.state = HeroState::BATTLE;
-	
-			// 몬스터가 있는 위치에 들어옴
-			Monster monster = monsterTable.GetMonster(dungeon.room[player.posY][player.posX].fieldType);
-			cout << right << setw(53) << "******* 몬스터와 조우하였다!! *******" << endl << endl;
-			while (1)
-			{
-				battleInfo.PrintBattleStatus(player, monster);
-				int playerInput = rand() % 3;
-				int monsterInput = rand() % 3;
-				string playerBattleLogStr = player.name + " [[ " + battleInfo.item[playerInput].name + " ]]";
-				string monsterBattleLogStr = "[[ " + battleInfo.item[monsterInput].name + " ]] " + monster.name;
-	
-				cout << right << setw(45) << "*** 가위! 바위! 보! ***" << endl;
-	
-				// 몬스터에게 패배하거나 몬스터가 죽을때까지 승부
-				while (playerInput == monsterInput)
-				{
-					// 무승부 처리
-					cout << right << setw(31) << playerBattleLogStr << "  VS  " << monsterBattleLogStr << endl;
-					cout << right << setw(42) << "*** 무 승 부 ***" << endl;
-	
-					playerInput = rand() % 3;
-					monsterInput = rand() % 3;
-					playerBattleLogStr = player.name + " [[ " + battleInfo.item[playerInput].name + " ]]";
-					monsterBattleLogStr = "[[ " + battleInfo.item[monsterInput].name + " ]] " + monster.name;
-				}
-	
-				cout << right << setw(31) << playerBattleLogStr << "  VS  " << monsterBattleLogStr << endl;
-				if (playerInput == (monsterInput + 1) % 3)
-				{
-					// 승리 처리
-					cout << right << setw(42) << "***  승  리  ***" << endl;
-					cout << "---------------------------------------------------------------------" << endl;
-					cout << ":::: 몬스터와의 전투에서 승리하였다" << endl;
-					if (monster.HitDamage(player.attack) == 1)
-					{
-						// 죽었는가?
-						cout << ":::: " << monster.rootExp << " 경험치 획득!!" << endl;
-						cout << ":::: " << monster.rootGold << " 골드 획득!!" << endl;
-	
-						player.gold += monster.rootGold;
-						int lvlUp = player.RootExp(monster.rootExp);
-						if (lvlUp)
-						{
-							cout << ":::: 플레이어 레벨이 " << lvlUp << " 올랐습니다." << endl;
-						}
-						dungeon.room[player.posY][player.posX].isMonster = false;
-						break;
-					}
-					else
-					{
-						cout << ":::: 몬스터에게 " << player.attack << " 데미지를 주었다." << endl;
-					}
-				}
-				else
-				{
-					// 패배 처리
-					cout << right << setw(42) << "***  패  배  ***" << endl;
-					cout << "---------------------------------------------------------------------" << endl;
-					cout << ":::: 몬스터와의 전투에서 패배하였다" << endl;
-					cout << ":::: " << monster.attack << "의 데미지를 받았다!!" << endl;
-					if (player.HitDamage(monster.attack) == HeroState::DIE) break;
-				}
-			}
-	
-			// 플레이어의 상태가 죽은상태인가?
-			if (player.state == HeroState::DIE)
-			{
-				cout << "---------------------------------------------------------------------" << endl;
-				cout << "        #   #    ###    #     #       #####    #####   #####         " << endl;
-				cout << "        #   #   #   #   #     #       #    #     #     #             " << endl;
-				cout << "         # #   #     #  #     #       #     #    #     ###           " << endl;
-				cout << "          #    #     #  #     #       #     #    #     #             " << endl;
-				cout << "          #     #   #   #     #       #    #     #     #             " << endl;
-				cout << "          #      ###     #####        #####    #####   #####         " << endl;
-				cout << "---------------------------------------------------------------------" << endl;
-				break;
-			}
-	
-			cout << "---------------------------------------------------------------------" << endl;
-			cout << ":::: 상점을 이용하시겠습니까? ( 0. 이용하지 않는다 / 1 : 이용한다 ) : ";
-			cin >> isUseShop;
-		}
-		
-		if (isUseShop)
-		{
-			player.state = HeroState::SHOP;
-	
-			// 상점이용
-			int selectItem = 0;
-			int itemCount = sizeof(shop.items) / sizeof(ShopItem);
-			while (1)
-			{
-				system("cls");
-				cout << "---------------------------------------------------------------------" << endl;
-				cout << " #####  #####  #####  #####  #####  #   #    ##### #   # ##### ##### " << endl;
-				cout << " #   #  #   #    #      #    #   #  ##  #    #     #   # #   # #   # " << endl;
-				cout << " #####  #   #    #      #    #   #  # # #    ##### ##### #   # ##### " << endl;
-				cout << " #      #   #    #      #    #   #  # # #        # #   # #   # #     " << endl;
-				cout << " #      #   #    #      #    #   #  #  ##        # #   # #   # #     " << endl;
-				cout << " #      #####    #    #####  #####  #   #    ##### #   # ##### #     " << endl;
-				cout << "---------------------------------------------------------------------" << endl;
-	
-				cout << "\n\n                  ---------------------------------                  " << endl;
-				for (int i = 0; i < itemCount; ++i)
-				{
-					ShopItem& item = shop.items[i];
-					string itemLabel = to_string((i + 1)) + ". " + item.name + " (" + to_string(item.gold) + " GOLD)\t남은수량 : " + to_string(item.qty);
-					if (i == selectItem)
-					{
-						itemLabel = ">>> " + itemLabel + " <<<";
-						cout << right << setw(12 + itemLabel.length()) << itemLabel << endl;
-					}
-					else
-					{
-						cout << right << setw(17 + itemLabel.length()) << itemLabel << endl;
-					}
-				}
-				cout << setw((selectItem == itemCount)?29:30) << ((selectItem == itemCount) ? ">>> " : "") << (itemCount+1) << ". 나가기" << ((selectItem == itemCount) ? " <<<" : "") << endl;
-				cout << "                  ---------------------------------                  " << endl;
-				cout << setw(50) << "CHANGE :: W,S  SELECT :: ENTER" << endl << endl;
-	
-				player.PrintHeroStatus();
-				
-				switch (_getch())
-				{
-				case 'w':
-				case 'W':
-					selectItem = (selectItem + itemCount) % (itemCount + 1);
-					break;
-				case 's':
-				case 'S':
-					selectItem = (selectItem + 1) % (itemCount + 1);
-					break;
-				case 13:
-					// 상점물품 선택
-					if (selectItem < itemCount)
-					{ 
-						if (player.IsPossibleUseGold(shop.items[selectItem].gold))
-						{
-							// 해당 골드는 갖고있다.
-							if (shop.IsBuyItem(selectItem))
-							{
-								// 물건이 정상적으로 사졌다
-								const ShopItem& item = shop.BuyItem(selectItem);
-								player.UseGold(item.gold);
-								player.UseItem(item);
-								cout << left << ":::: 소지금 " << item.gold << " GOLD 사용하였습니다." << endl;
-								cout << "---------------------------------------------------------------------" << endl;
-								cout << right << setw(43 + item.name.length()) << string("******* 체력 " + item.name + " *******") << endl;
-							}
-							else
-							{
-								// 물건이 없어서 구매 불가
-								cout << left << ":::: 품절된 상품입니다 " << endl;
-								cout << "---------------------------------------------------------------------" << endl;
-							}
-						}
-						else cout << right << setw(54) << "******* 소지금이 부족합니다!!! *******" << endl << endl;
-					}
-					else
-					{
-						isUseShop = false;
-						cout << right << setw(51) << "******* 상점을 나갔습니다 *******" << endl << endl;
-					}
-				
-					cout << "::::  아무키나 누르세요.... ";
-					_getch();
-					break;
-				default:
-					if (_kbhit())
-					{
-						_getch();
-						cout << endl;
-						cout << ":::::  ERROR  :::::" << endl;
-						cout << ":::::  입력이 잘못되었습니다.  :::::" << endl;
-						cout << ":::::  만약 한글로 되어있다면 한/영키로 영어로 바꿔주세요  :::::" << endl;
-						_getch();
-					}
-					break;
-				}
-				// 상점을 사용안할거라면 상점에서 나가기
-				if (!isUseShop) break;
-			}
-	
-			// 상점에서 나온 후 지워진 맵정보 재출력
-			system("cls");
-			cout << "---------------------------------------------------------------------" << endl;
-			cout << "      #####  #####  #####  #####      #   #  #####  #####  #####     " << endl;
-			cout << "      #        #    #      #   #      #   #  #      #   #  #   #     " << endl;
-			cout << "      #####    #    ###    #####      #####  ###    #####  #   #     " << endl;
-			cout << "          #    #    #      #          #   #  #      # #    #   #     " << endl;
-			cout << "          #    #    #      #          #   #  #      #  #   #   #     " << endl;
-			cout << "      #####    #    #####  #          #   #  #####  #   #  #####     " << endl;
-			cout << "---------------------------------------------------------------------" << endl;
-			dungeon.PrintDungeon(&player, debug);
-		}
-	
-		player.PrintHeroStatus();
-		
-		cout << "::::  이동키를 눌러주세요 (W, A, S, D)..... ";
-		int inputKey = _getch();
-		switch (tolower(inputKey))
-		{
-		case 'w':
-			if (player.posY > 0)
-			{
-				if (dungeon.IsPossibleMove(player.posX, player.posY - 1))
-				{
-					--player.posY;
-					++isMonsterMove;
-					player.state = HeroState::IDLE;
-				}
-			}
-			break;
-		case 's':
-			if (player.posY < dungeon.rows - 1)
-			{
-				if (dungeon.IsPossibleMove(player.posX, player.posY + 1))
-				{
-					++player.posY;
-					++isMonsterMove;
-					player.state = HeroState::IDLE;
-				}
-			}
-			break;
-		case 'a':
-			if (player.posX > 0)
-			{
-				if (dungeon.IsPossibleMove(player.posX - 1, player.posY))
-				{
-					--player.posX;
-					++isMonsterMove;
-					player.state = HeroState::IDLE;
-				}
-			}
-			break;
-		case 'd':
-			if (player.posX < dungeon.cols - 1)
-			{
-				if (dungeon.IsPossibleMove(player.posX + 1, player.posY))
-				{
-					++player.posX;
-					++isMonsterMove;
-					player.state = HeroState::IDLE;
-				}
-			}
-			break;
-		case 'p':
-			debug = !debug;
-			break;
-		case 'm':
-			player.gold += 1000;
-			break;
-		default:
-			if (_kbhit())
-			{
-				_getch();
-				cout << endl;
-				cout << ":::::  입력이 잘못되었습니다.  :::::" << endl;
-				cout << ":::::  만약 한글로 되어있다면 한/영키로 영어로 바꿔주세요  :::::" << endl;
-				_getch();
-			}
-		}
-	
-		if (isMonsterMove >= 2)
-		{
-			// 몬스터 이동
-			isMonsterMove = 0;
-			for (int i = 0; i < dungeon.rows; i++)
-			{
-				for (int j = 0; j < dungeon.cols; j++)
-				{
-					Room& room = dungeon.room[i][j];
-					if (room.isMonster)
-					{
-						Room* next = room.next[rand() % 4];
-						if (next && next->fieldType != FieldType::out && next->fieldType != FieldType::wall && next->fieldType != FieldType::fire)
-						{
-							swap(room.isMonster, next->isMonster);
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	// 메모리 해제
-	player.Release();
-	dungeon.Release();
-	for (int i = 0; i < 10; ++i) gDungeonSet[i].Release();
+	//srand(time(NULL));
+	//
+	//system("MODE CON COLS=101 LINES=51");
+	//
+	//// 난이도 정보
+	//Difficulty difficulty;
+	//int difficultyInput = 0;
+	//bool isUseShop = false;
+	//int isMonsterMove = 0;
+	//Hero player;
+	//Dungeon dungeon;
+	//dungeon.notice[0] = "* 던전에서 탈출에 성공하세요 *";
+	//dungeon.notice[1] = "";
+	//dungeon.notice[2] = "  O : 플레이어";
+	//dungeon.notice[3] = "  E : 탈출구";
+	//dungeon.notice[4] = "  . : 공터, T : 숲, ~ : 늪";
+	//dungeon.notice[5] = "  # : 벽, A : 햇불";
+	//dungeon.notice[6] = "";
+	//dungeon.notice[7] = "  P : 몬스터위치 확인";
+	//dungeon.notice[8] = "  M : 소지금 1000골드 UP";
+	//dungeon.noticeCount = 9;
+	//
+	//// 맵 디버그 모드
+	//bool debug = false;
+	//
+	//// 타이틀
+	//bool isInitalized = false;
+	//int initalizeStep = 0;
+	//while (!isInitalized)
+	//{
+	//	system("cls");
+	//
+	//	cout << "\n\n\n";
+	//	cout << "      ----------------------------------------------------------     " << endl;
+	//	cout << "---------------------------------------------------------------------" << endl;
+	//	cout << "      #####  #####  #####  #####      #   #  #####  #####  #####     " << endl;
+	//	cout << "      #        #    #      #   #      #   #  #      #   #  #   #     " << endl;
+	//	cout << "      #####    #    ###    #####      #####  ###    #####  #   #     " << endl;
+	//	cout << "          #    #    #      #          #   #  #      # #    #   #     " << endl;
+	//	cout << "          #    #    #      #          #   #  #      #  #   #   #     " << endl;
+	//	cout << "      #####    #    #####  #          #   #  #####  #   #  #####     " << endl;
+	//	cout << "---------------------------------------------------------------------" << endl;
+	//	cout << "     -----------------------------------------------------------     " << endl;
+	//	cout << "\n\n";
+	//	
+	//	cout << "                                ------                               " << endl;
+	//	cout << "                              ----  ----                             " << endl;
+	//	cout << "                                                                     " << endl;
+	//
+	//	cout << right << setw(35 + difficulty.name[difficultyInput].length() / 2) << difficulty.name[difficultyInput] << endl;
+	//	
+	//	if (initalizeStep == 0)
+	//	{
+	//		cout << "                                                                     " << endl;
+	//		cout << "                    CHANGE :: W,S  SELECT :: ENTER                   " << endl;
+	//	}
+	//	cout << "                                                                     " << endl;
+	//	cout << "                              ----  ----                             " << endl;
+	//	cout << "                                ------                               " << endl;
+	//
+	//	if (initalizeStep == 0)
+	//	{
+	//		switch (_getch())
+	//		{
+	//		case 'w':
+	//		case 'W':
+	//			difficultyInput = (difficultyInput + 2) % 3;
+	//			break;
+	//		case 's':
+	//		case 'S':
+	//			difficultyInput = (difficultyInput + 1) % 3;
+	//			break;
+	//		case 13:
+	//			++initalizeStep;
+	//
+	//			// 플레이어의 난이도별 능력치 설정
+	//			dungeon.rows = difficulty.dungeonSize[difficultyInput];
+	//			dungeon.cols = difficulty.dungeonSize[difficultyInput];
+	//			player = { difficulty.heroHP[difficultyInput], difficulty.heroHP[difficultyInput], 1000, 0, 0, 25, 1, 0, 3.5f };
+	//			break;
+	//		case 27:
+	//			// ESC 입력 게임종료;
+	//			return 0;
+	//			break;
+	//		default:
+	//			if (_kbhit())
+	//			{
+	//				_getch();
+	//				cout << ":::::  ERROR  :::::" << endl;
+	//				cout << ":::::  입력이 잘못되었습니다.  :::::" << endl;
+	//				cout << ":::::  만약 한글로 되어있다면 한/영키로 영어로 바꿔주세요  :::::" << endl;
+	//				_getch();
+	//			}
+	//			break;
+	//		}
+	//	}
+	//	else
+	//	{
+	//		// 영웅의 이름을 입력해주세요.
+	//		cout << "\n               영웅의 이름을 입력해주세요. :: ";
+	//		cin >> player.name;
+	//
+	//		// 초기정보 입력 끝
+	//		isInitalized = true;
+	//
+	//		gQusetTable.questNode[0] = QuestNode(1, "이동해보세요", "W A S D 를 이용해서 이동해보세요", [](void* obj) { ((Hero*)obj)->RootExp(10); }, nullptr);
+	//		gQusetTable.questNode[0] = QuestNode(1, "이동해보세요", "W A S D 를 이용해서 이동해보세요", [](void* obj) { ((Hero*)obj)->RootExp(10); }, nullptr);
+	//		gQusetTable.questNode[0] = QuestNode(1, "이동해보세요", "W A S D 를 이용해서 이동해보세요", [](void* obj) { ((Hero*)obj)->RootExp(10); }, nullptr);
+	//		gQusetTable.questNode[0] = QuestNode(1, "이동해보세요", "W A S D 를 이용해서 이동해보세요", [](void* obj) { ((Hero*)obj)->RootExp(10); }, nullptr);
+	//		gQusetTable.questNode[0] = QuestNode(1, "이동해보세요", "W A S D 를 이용해서 이동해보세요", [](void* obj) { ((Hero*)obj)->RootExp(10); }, nullptr);
+	//	}
+	//}
+	//
+	//// 상점의 정보
+	//Shop shop;
+	//shop.items[0] = { 100, 999, 5, "전체회복" };
+	//shop.items[1] = { 10, 10, 10, "10회복" };
+	//shop.items[2] = { 20, 20, 20, "20회복" };
+	//shop.items[3] = { 30, 30, 30, "30회복" };
+	//shop.items[4] = { 40, 40, 40, "40회복" };
+	//
+	//// 배틀정보
+	//BattleInfo battleInfo;
+	//battleInfo.item[0] = { "가위" };
+	//battleInfo.item[1] = { "바위" };
+	//battleInfo.item[2] = { " 보 " };
+	//
+	//// 몬스터 설정
+	//MonsterTable monsterTable;
+	//int mStrength = difficulty.monsterStrength[difficultyInput];
+	//
+	//// 0: 땅, 1: 숲, 2: 늪, 3: 벽, 4: 탈출구
+	//monsterTable.monster[FieldType::empty][0] = { 10 * mStrength, 10 * mStrength, 10 * mStrength, 20, 30, 0, "두더지" };
+	//monsterTable.monster[FieldType::empty][1] = { 12 * mStrength, 20 * mStrength, 20 * mStrength, 25, 50, 0, "슬라임" };
+	//monsterTable.monster[FieldType::empty][2] = { 14 * mStrength, 30 * mStrength, 30 * mStrength, 30, 80, 0, "도적" };
+	//monsterTable.monster[FieldType::empty][3] = { 16 * mStrength, 40 * mStrength, 40 * mStrength, 35, 100, 0, "산적" };
+	//
+	//monsterTable.monster[FieldType::wood][0] = { 10 * mStrength, 10 * mStrength, 10 * mStrength, 20, 30, 0, "토끼" };
+	//monsterTable.monster[FieldType::wood][1] = { 12 * mStrength, 20 * mStrength, 20 * mStrength, 25, 50, 0, "사슴" };
+	//monsterTable.monster[FieldType::wood][2] = { 14 * mStrength, 30 * mStrength, 30 * mStrength, 30, 80, 0, "늑대" };
+	//monsterTable.monster[FieldType::wood][3] = { 16 * mStrength, 40 * mStrength, 40 * mStrength, 35, 100, 0, "늑대인간" };
+	//
+	//monsterTable.monster[FieldType::swamp][0] = { 10 * mStrength, 10 * mStrength, 10 * mStrength, 20, 30, 0, "두꺼비" };
+	//monsterTable.monster[FieldType::swamp][1] = { 12 * mStrength, 20 * mStrength, 20 * mStrength, 25, 50, 0, "뱀" };
+	//monsterTable.monster[FieldType::swamp][2] = { 14 * mStrength, 30 * mStrength, 30 * mStrength, 30, 80, 0, "저주받은 나무" };
+	//monsterTable.monster[FieldType::swamp][3] = { 16 * mStrength, 40 * mStrength, 40 * mStrength, 35, 100, 0, "식인식물" };
+	//
+	//dungeon.CreateDungeon(difficulty.dungeonSize[difficultyInput], difficultyInput);
+	//dungeon.SetMonsters(difficulty.monsterEncounter[difficultyInput], &player);
+	//
+	//while (1)
+	//{
+	//	system("cls");
+	//
+	//	// 맵 출력
+	//	cout << "---------------------------------------------------------------------" << endl;
+	//	cout << "      #####  #####  #####  #####      #   #  #####  #####  #####     " << endl;
+	//	cout << "      #        #    #      #   #      #   #  #      #   #  #   #     " << endl;
+	//	cout << "      #####    #    ###    #####      #####  ###    #####  #   #     " << endl;
+	//	cout << "          #    #    #      #          #   #  #      # #    #   #     " << endl;
+	//	cout << "          #    #    #      #          #   #  #      #  #   #   #     " << endl;
+	//	cout << "      #####    #    #####  #          #   #  #####  #   #  #####     " << endl;
+	//	cout << "---------------------------------------------------------------------" << endl;
+	//	dungeon.PrintDungeon(&player, debug);
+	//
+	//	if (dungeon.room[player.posY][player.posX].fieldType == FieldType::out)
+	//	{
+	//		// 탈출
+	//		cout << "---------------------------------------------------------------------" << endl;
+	//		cout << "     #####     #####      #####         #        #####     #####     " << endl;
+	//		cout << "     #         #          #            # #       #   #     #         " << endl;
+	//		cout << "     ###       #####      #           #   #      #####     ###       " << endl;
+	//		cout << "     #             #      #           #####      #         #         " << endl;
+	//		cout << "     #             #      #           #   #      #         #         " << endl;
+	//		cout << "     #####     #####      #####       #   #      #         #####     " << endl;
+	//		cout << "---------------------------------------------------------------------" << endl;
+	//		break;
+	//	}
+	//	/*
+	//	else if (player.state == HeroState::IDLE && dungeon.room[player.posY][player.posX].monster)
+	//	{
+	//		// 현재 사용하지 않는 전투
+	//		player.state = 1;
+	//
+	//		// 몬스터가 있는 위치에 들어옴
+	//		Monster& monster = *(dungeon.room[player.posY][player.posX].monster);
+	//		battleInfo.PrintBattleStatus(player, monster);
+	//		cout << right << setw(53) << "******* 몬스터와 조우하였다!! *******" << endl << endl;
+	//		int playerInput = rand() % 3;
+	//		int monsterInput = rand() % 3;
+	//		string playerBattleLogStr = player.name + " [[ " + battleInfo.item[playerInput].name + " ]]";
+	//		string monsterBattleLogStr = "[[ " + battleInfo.item[monsterInput].name + " ]] " + monster.name;
+	//
+	//		cout << right << setw(45) << "*** 가위! 바위! 보! ***" << endl;
+	//		while (playerInput == monsterInput)
+	//		{
+	//			// 무승부 처리
+	//			cout << right << setw(31) << playerBattleLogStr << "  VS  " << monsterBattleLogStr << endl;
+	//			cout << right << setw(42) << "*** 무 승 부 ***" << endl;
+	//			
+	//			playerInput = rand() % 3;
+	//			monsterInput = rand() % 3;
+	//			playerBattleLogStr = player.name + " [[ " + battleInfo.item[playerInput].name + " ]]";
+	//			monsterBattleLogStr = "[[ " + battleInfo.item[monsterInput].name + " ]] " + monster.name;
+	//		}
+	//
+	//		cout << right << setw(31) << playerBattleLogStr << "  VS  " << monsterBattleLogStr << endl;
+	//		if (playerInput == (monsterInput + 1) % 3)
+	//		{
+	//			// 승리 처리
+	//			cout << right << setw(42) << "***  승  리  ***" << endl;
+	//			cout << "---------------------------------------------------------------------" << endl;
+	//			cout << ":::: 몬스터와의 전투에서 승리하였다" << endl;
+	//			if (monster.HitDamage(player.attack) == 1)
+	//			{
+	//				cout << ":::: " << monster.rootExp << " 경험치 획득!!" << endl;
+	//				cout << ":::: " << monster.rootGold << " 골드 획득!!" << endl;
+	//
+	//				// 죽었는가?
+	//				player.gold += monster.rootGold;
+	//				int lvlUp = player.RootExp(monster.rootExp);
+	//				if (lvlUp)
+	//				{
+	//					cout << ":::: 플레이어 레벨이 " << lvlUp << " 올랐습니다." << endl;
+	//				}
+	//
+	//				delete &monster;
+	//				dungeon.room[player.posY][player.posX].monster = nullptr;
+	//			}
+	//			else
+	//			{
+	//				cout << ":::: 몬스터에게 " << player.attack << " 데미지를 주었다." << endl;
+	//				cout << ":::: 몬스터가 도망갔습니다." << endl;
+	//			}
+	//		}
+	//		else
+	//		{
+	//			// 패배 처리
+	//			cout << right << setw(42) << "***  패  배  ***" << endl;
+	//			cout << "---------------------------------------------------------------------" << endl;
+	//			cout << ":::: 몬스터와의 전투에서 패배하였다" << endl;
+	//			cout << ":::: " << monster.attack << "의 데미지를 받았다!!" << endl;
+	//
+	//			// 플레이어의 상태가 죽은상태인가?
+	//			if (player.HitDamage(monster.attack) == 3)
+	//			{
+	//				cout << "---------------------------------------------------------------------" << endl;
+	//				cout << "        #   #    ###    #     #       #####    #####   #####         " << endl;
+	//				cout << "        #   #   #   #   #     #       #    #     #     #             " << endl;
+	//				cout << "         # #   #     #  #     #       #     #    #     ###           " << endl;
+	//				cout << "          #    #     #  #     #       #     #    #     #             " << endl;
+	//				cout << "          #     #   #   #     #       #    #     #     #             " << endl;
+	//				cout << "          #      ###     #####        #####    #####   #####         " << endl;
+	//				cout << "---------------------------------------------------------------------" << endl;
+	//				break;
+	//			}
+	//		}
+	//
+	//		cout << "---------------------------------------------------------------------" << endl;
+	//		cout << ":::: 상점을 이용하시겠습니까? ( 0. 이용하지 않는다 / 1 : 이용한다 ) : ";
+	//		cin >> isUseShop;
+	//	}
+	//	*/
+	//	else if (player.state == HeroState::IDLE && dungeon.room[player.posY][player.posX].isMonster)
+	//	{
+	//		// 현재 사용하지 않는 전투
+	//		player.state = HeroState::BATTLE;
+	//
+	//		// 몬스터가 있는 위치에 들어옴
+	//		Monster monster = monsterTable.GetMonster(dungeon.room[player.posY][player.posX].fieldType);
+	//		cout << right << setw(53) << "******* 몬스터와 조우하였다!! *******" << endl << endl;
+	//		while (1)
+	//		{
+	//			battleInfo.PrintBattleStatus(player, monster);
+	//			int playerInput = rand() % 3;
+	//			int monsterInput = rand() % 3;
+	//			string playerBattleLogStr = player.name + " [[ " + battleInfo.item[playerInput].name + " ]]";
+	//			string monsterBattleLogStr = "[[ " + battleInfo.item[monsterInput].name + " ]] " + monster.name;
+	//
+	//			cout << right << setw(45) << "*** 가위! 바위! 보! ***" << endl;
+	//
+	//			// 몬스터에게 패배하거나 몬스터가 죽을때까지 승부
+	//			while (playerInput == monsterInput)
+	//			{
+	//				// 무승부 처리
+	//				cout << right << setw(31) << playerBattleLogStr << "  VS  " << monsterBattleLogStr << endl;
+	//				cout << right << setw(42) << "*** 무 승 부 ***" << endl;
+	//
+	//				playerInput = rand() % 3;
+	//				monsterInput = rand() % 3;
+	//				playerBattleLogStr = player.name + " [[ " + battleInfo.item[playerInput].name + " ]]";
+	//				monsterBattleLogStr = "[[ " + battleInfo.item[monsterInput].name + " ]] " + monster.name;
+	//			}
+	//
+	//			cout << right << setw(31) << playerBattleLogStr << "  VS  " << monsterBattleLogStr << endl;
+	//			if (playerInput == (monsterInput + 1) % 3)
+	//			{
+	//				// 승리 처리
+	//				cout << right << setw(42) << "***  승  리  ***" << endl;
+	//				cout << "---------------------------------------------------------------------" << endl;
+	//				cout << ":::: 몬스터와의 전투에서 승리하였다" << endl;
+	//				if (monster.HitDamage(player.attack) == 1)
+	//				{
+	//					// 죽었는가?
+	//					cout << ":::: " << monster.rootExp << " 경험치 획득!!" << endl;
+	//					cout << ":::: " << monster.rootGold << " 골드 획득!!" << endl;
+	//
+	//					player.gold += monster.rootGold;
+	//					int lvlUp = player.RootExp(monster.rootExp);
+	//					if (lvlUp)
+	//					{
+	//						cout << ":::: 플레이어 레벨이 " << lvlUp << " 올랐습니다." << endl;
+	//					}
+	//					dungeon.room[player.posY][player.posX].isMonster = false;
+	//					break;
+	//				}
+	//				else
+	//				{
+	//					cout << ":::: 몬스터에게 " << player.attack << " 데미지를 주었다." << endl;
+	//				}
+	//			}
+	//			else
+	//			{
+	//				// 패배 처리
+	//				cout << right << setw(42) << "***  패  배  ***" << endl;
+	//				cout << "---------------------------------------------------------------------" << endl;
+	//				cout << ":::: 몬스터와의 전투에서 패배하였다" << endl;
+	//				cout << ":::: " << monster.attack << "의 데미지를 받았다!!" << endl;
+	//				if (player.HitDamage(monster.attack) == HeroState::DIE) break;
+	//			}
+	//		}
+	//
+	//		// 플레이어의 상태가 죽은상태인가?
+	//		if (player.state == HeroState::DIE)
+	//		{
+	//			cout << "---------------------------------------------------------------------" << endl;
+	//			cout << "        #   #    ###    #     #       #####    #####   #####         " << endl;
+	//			cout << "        #   #   #   #   #     #       #    #     #     #             " << endl;
+	//			cout << "         # #   #     #  #     #       #     #    #     ###           " << endl;
+	//			cout << "          #    #     #  #     #       #     #    #     #             " << endl;
+	//			cout << "          #     #   #   #     #       #    #     #     #             " << endl;
+	//			cout << "          #      ###     #####        #####    #####   #####         " << endl;
+	//			cout << "---------------------------------------------------------------------" << endl;
+	//			break;
+	//		}
+	//
+	//		cout << "---------------------------------------------------------------------" << endl;
+	//		cout << ":::: 상점을 이용하시겠습니까? ( 0. 이용하지 않는다 / 1 : 이용한다 ) : ";
+	//		cin >> isUseShop;
+	//	}
+	//	
+	//	if (isUseShop)
+	//	{
+	//		player.state = HeroState::SHOP;
+	//
+	//		// 상점이용
+	//		int selectItem = 0;
+	//		int itemCount = sizeof(shop.items) / sizeof(ShopItem);
+	//		while (1)
+	//		{
+	//			system("cls");
+	//			cout << "---------------------------------------------------------------------" << endl;
+	//			cout << " #####  #####  #####  #####  #####  #   #    ##### #   # ##### ##### " << endl;
+	//			cout << " #   #  #   #    #      #    #   #  ##  #    #     #   # #   # #   # " << endl;
+	//			cout << " #####  #   #    #      #    #   #  # # #    ##### ##### #   # ##### " << endl;
+	//			cout << " #      #   #    #      #    #   #  # # #        # #   # #   # #     " << endl;
+	//			cout << " #      #   #    #      #    #   #  #  ##        # #   # #   # #     " << endl;
+	//			cout << " #      #####    #    #####  #####  #   #    ##### #   # ##### #     " << endl;
+	//			cout << "---------------------------------------------------------------------" << endl;
+	//
+	//			cout << "\n\n                  ---------------------------------                  " << endl;
+	//			for (int i = 0; i < itemCount; ++i)
+	//			{
+	//				ShopItem& item = shop.items[i];
+	//				string itemLabel = to_string((i + 1)) + ". " + item.name + " (" + to_string(item.gold) + " GOLD)\t남은수량 : " + to_string(item.qty);
+	//				if (i == selectItem)
+	//				{
+	//					itemLabel = ">>> " + itemLabel + " <<<";
+	//					cout << right << setw(12 + itemLabel.length()) << itemLabel << endl;
+	//				}
+	//				else
+	//				{
+	//					cout << right << setw(17 + itemLabel.length()) << itemLabel << endl;
+	//				}
+	//			}
+	//			cout << setw((selectItem == itemCount)?29:30) << ((selectItem == itemCount) ? ">>> " : "") << (itemCount+1) << ". 나가기" << ((selectItem == itemCount) ? " <<<" : "") << endl;
+	//			cout << "                  ---------------------------------                  " << endl;
+	//			cout << setw(50) << "CHANGE :: W,S  SELECT :: ENTER" << endl << endl;
+	//
+	//			player.PrintHeroStatus();
+	//			
+	//			switch (_getch())
+	//			{
+	//			case 'w':
+	//			case 'W':
+	//				selectItem = (selectItem + itemCount) % (itemCount + 1);
+	//				break;
+	//			case 's':
+	//			case 'S':
+	//				selectItem = (selectItem + 1) % (itemCount + 1);
+	//				break;
+	//			case 13:
+	//				// 상점물품 선택
+	//				if (selectItem < itemCount)
+	//				{ 
+	//					if (player.IsPossibleUseGold(shop.items[selectItem].gold))
+	//					{
+	//						// 해당 골드는 갖고있다.
+	//						if (shop.IsBuyItem(selectItem))
+	//						{
+	//							// 물건이 정상적으로 사졌다
+	//							const ShopItem& item = shop.BuyItem(selectItem);
+	//							player.UseGold(item.gold);
+	//							player.UseItem(item);
+	//							cout << left << ":::: 소지금 " << item.gold << " GOLD 사용하였습니다." << endl;
+	//							cout << "---------------------------------------------------------------------" << endl;
+	//							cout << right << setw(43 + item.name.length()) << string("******* 체력 " + item.name + " *******") << endl;
+	//						}
+	//						else
+	//						{
+	//							// 물건이 없어서 구매 불가
+	//							cout << left << ":::: 품절된 상품입니다 " << endl;
+	//							cout << "---------------------------------------------------------------------" << endl;
+	//						}
+	//					}
+	//					else cout << right << setw(54) << "******* 소지금이 부족합니다!!! *******" << endl << endl;
+	//				}
+	//				else
+	//				{
+	//					isUseShop = false;
+	//					cout << right << setw(51) << "******* 상점을 나갔습니다 *******" << endl << endl;
+	//				}
+	//			
+	//				cout << "::::  아무키나 누르세요.... ";
+	//				_getch();
+	//				break;
+	//			default:
+	//				if (_kbhit())
+	//				{
+	//					_getch();
+	//					cout << endl;
+	//					cout << ":::::  ERROR  :::::" << endl;
+	//					cout << ":::::  입력이 잘못되었습니다.  :::::" << endl;
+	//					cout << ":::::  만약 한글로 되어있다면 한/영키로 영어로 바꿔주세요  :::::" << endl;
+	//					_getch();
+	//				}
+	//				break;
+	//			}
+	//			// 상점을 사용안할거라면 상점에서 나가기
+	//			if (!isUseShop) break;
+	//		}
+	//
+	//		// 상점에서 나온 후 지워진 맵정보 재출력
+	//		system("cls");
+	//		cout << "---------------------------------------------------------------------" << endl;
+	//		cout << "      #####  #####  #####  #####      #   #  #####  #####  #####     " << endl;
+	//		cout << "      #        #    #      #   #      #   #  #      #   #  #   #     " << endl;
+	//		cout << "      #####    #    ###    #####      #####  ###    #####  #   #     " << endl;
+	//		cout << "          #    #    #      #          #   #  #      # #    #   #     " << endl;
+	//		cout << "          #    #    #      #          #   #  #      #  #   #   #     " << endl;
+	//		cout << "      #####    #    #####  #          #   #  #####  #   #  #####     " << endl;
+	//		cout << "---------------------------------------------------------------------" << endl;
+	//		dungeon.PrintDungeon(&player, debug);
+	//	}
+	//
+	//	player.PrintHeroStatus();
+	//	
+	//	cout << "::::  이동키를 눌러주세요 (W, A, S, D)..... ";
+	//	int inputKey = _getch();
+	//	switch (tolower(inputKey))
+	//	{
+	//	case 'w':
+	//		if (player.posY > 0)
+	//		{
+	//			if (dungeon.IsPossibleMove(player.posX, player.posY - 1))
+	//			{
+	//				--player.posY;
+	//				++isMonsterMove;
+	//				player.state = HeroState::IDLE;
+	//			}
+	//		}
+	//		break;
+	//	case 's':
+	//		if (player.posY < dungeon.rows - 1)
+	//		{
+	//			if (dungeon.IsPossibleMove(player.posX, player.posY + 1))
+	//			{
+	//				++player.posY;
+	//				++isMonsterMove;
+	//				player.state = HeroState::IDLE;
+	//			}
+	//		}
+	//		break;
+	//	case 'a':
+	//		if (player.posX > 0)
+	//		{
+	//			if (dungeon.IsPossibleMove(player.posX - 1, player.posY))
+	//			{
+	//				--player.posX;
+	//				++isMonsterMove;
+	//				player.state = HeroState::IDLE;
+	//			}
+	//		}
+	//		break;
+	//	case 'd':
+	//		if (player.posX < dungeon.cols - 1)
+	//		{
+	//			if (dungeon.IsPossibleMove(player.posX + 1, player.posY))
+	//			{
+	//				++player.posX;
+	//				++isMonsterMove;
+	//				player.state = HeroState::IDLE;
+	//			}
+	//		}
+	//		break;
+	//	case 'p':
+	//		debug = !debug;
+	//		break;
+	//	case 'm':
+	//		player.gold += 1000;
+	//		break;
+	//	default:
+	//		if (_kbhit())
+	//		{
+	//			_getch();
+	//			cout << endl;
+	//			cout << ":::::  입력이 잘못되었습니다.  :::::" << endl;
+	//			cout << ":::::  만약 한글로 되어있다면 한/영키로 영어로 바꿔주세요  :::::" << endl;
+	//			_getch();
+	//		}
+	//	}
+	//
+	//	if (isMonsterMove >= 2)
+	//	{
+	//		// 몬스터 이동
+	//		isMonsterMove = 0;
+	//		for (int i = 0; i < dungeon.rows; i++)
+	//		{
+	//			for (int j = 0; j < dungeon.cols; j++)
+	//			{
+	//				Room& room = dungeon.room[i][j];
+	//				if (room.isMonster)
+	//				{
+	//					Room* next = room.next[rand() % 4];
+	//					if (next && next->fieldType != FieldType::out && next->fieldType != FieldType::wall && next->fieldType != FieldType::fire)
+	//					{
+	//						swap(room.isMonster, next->isMonster);
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//
+	//// 메모리 해제
+	//player.Release();
+	//dungeon.Release();
+	//for (int i = 0; i < 10; ++i) gDungeonSet[i].Release();
 }
 
 // 프로그램 실행: <Ctrl+F5> 또는 [디버그] > [디버깅하지 않고 시작] 메뉴
