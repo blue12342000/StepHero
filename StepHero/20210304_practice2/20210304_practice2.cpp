@@ -1,18 +1,10 @@
 ﻿// 20210304_practice2.cpp : 이 파일에는 'main' 함수가 포함됩니다. 거기서 프로그램 실행이 시작되고 종료됩니다.
 //
 
-#include <iomanip>
-#include <iostream>
-#include <string>
-#include <cmath>
-#include <ctime>
-#include <conio.h>
-#include <stdio.h>
-#include <map>
-#include <functional>
+#include "stdafx.h"
+#include "FileManager.h"
 
-using namespace std;
-using FunctionPtr = function<void(void*)>;
+FileManager gFileManager;
 
 // 0: 땅, 1: 숲, 2: 늪, 3: 벽, 4: 불, 5: 탈출구
 char G_CHAR_FIELD_TYPE[6] = {'.', 'T', '~', '#', 'A', 'E'};
@@ -57,7 +49,7 @@ struct InputKey
 {
 	enum InputType
 	{
-		ANYKEYS = 0, SELECT, INGAME, NONE
+		ANYKEYS = 0, SELECT, INGAME, TEXT, NONE
 	};
 
 	enum InputResult
@@ -65,9 +57,11 @@ struct InputKey
 		SUCCESS = 0, FAIL, EMPTY
 	};
 
-	char keys[256];
+	bool keys[256] = {false,};
 	InputResult inputResult = InputResult::EMPTY;
 	InputKeyRequest inputKeyRequest[InputType::NONE];
+
+	string inputText;
 
 	int currRequest = 0;
 	int requestCount = 0;
@@ -79,7 +73,7 @@ struct InputKey
 		inputKeyRequest[InputType::INGAME] = InputKeyRequest(5, new char[5]{ 'w', 'a', 's', 'd', 13 });
 	}
 
-	void Requset(InputType inputType)
+	void Request(InputType inputType)
 	{
 		requestBuffer[(currRequest + requestCount + 1) % 5] = inputType;
 		++requestCount;
@@ -94,18 +88,22 @@ struct InputKey
 	void Update()
 	{
 		inputResult = InputResult::EMPTY;
+		memset(keys, false, sizeof(bool) * 256);
 		if (requestCount > 0)
 		{
 			bool isOK = false;
-			char inputChar = _getch();
-			if (_kbhit()) _getch();
+			char inputChar;
 			switch (requestBuffer[currRequest])
 			{
 			case InputType::ANYKEYS:
+				inputChar = tolower(_getch());
+				if (_kbhit()) _getch();
 				isOK = true;
 				break;
 			case InputType::SELECT:
 			case InputType::INGAME:
+				inputChar = tolower(_getch());
+				if (_kbhit()) _getch();
 				for (int i = 0; i < inputKeyRequest[requestBuffer[currRequest]].size; ++i)
 				{
 					if (inputChar == inputKeyRequest[requestBuffer[currRequest]].keyGroup[i])
@@ -114,16 +112,26 @@ struct InputKey
 					}
 				}
 				break;
+			case InputType::TEXT:
+				cin >> inputText;
+				isOK = true;
+				break;
 			}
 
 			inputResult = InputResult::FAIL;
 			if (isOK)
 			{
+				keys[inputChar] = true;
 				inputResult = InputResult::SUCCESS;
 				currRequest = (currRequest + 1) % 5;
 				--requestCount;
 			}
 		}
+	}
+
+	bool IsPressKey(char key)
+	{
+		return keys[key];
 	}
 
 } gInputKey;
@@ -154,22 +162,25 @@ struct TextBuffer
 	{
 		int localY = readPeek - offset;
 		if (localY < 0 || localY >= dataCount) return nullptr;
-		lastRenderLine = localY;
-		return &buffer[(currPeek + localY) % 100];
+		string* str = &buffer[(currPeek + localY) % 100];
+		++lastRenderLine;
+		return str;
 	}
 
 	void Refresh()
 	{
-		if (!isRefreshed)
+		if (isRefreshed)
 		{
-			currPeek = (currPeek + lastRenderLine + 1) % 100;
+			currPeek = (currPeek + lastRenderLine) % 100;
 			dataCount -= lastRenderLine;
+			lastRenderLine = 0;
 		}
 	}
 
 	void PushBack(string str)
 	{
-		buffer[currPeek + dataCount] = string(cols, ' ');
+		// 초기화
+		buffer[(currPeek + dataCount) % 100] = string(cols, ' ');
 
 		int size = (str.length() < cols) ? str.length() : cols;
 		int begin = 0;
@@ -184,7 +195,7 @@ struct TextBuffer
 			begin = cols - size;
 			break;
 		}
-		buffer[currPeek + dataCount].replace(begin, size, str);
+		buffer[(currPeek + dataCount) % 100].replace(begin, size, str);
 		++dataCount;
 	}
 
@@ -220,7 +231,7 @@ struct TextLayout
 		case LayoutKind::TITLE:
 
 			textBufferMap.insert(make_pair(LayoutPos::TOP, TextBuffer(TextBuffer::TextAlign::CENTER, 0, 16, 100, false)));
-			textBufferMap.insert(make_pair(LayoutPos::CONTENT, TextBuffer(TextBuffer::TextAlign::CENTER, 16, 34, 100, false)));
+			textBufferMap.insert(make_pair(LayoutPos::CONTENT, TextBuffer(TextBuffer::TextAlign::CENTER, 17, 8, 100, true)));
 
 			textBufferTree = new TextBuffer*[2]{ &textBufferMap[LayoutPos::TOP], &textBufferMap[LayoutPos::CONTENT] };
 			size = 2;
@@ -1611,43 +1622,89 @@ struct StepHero
 {
 	enum GameState
 	{
-		TITLE = 0, INGAME, BATTLE, SHOP, ENDING
+		TITLE_INPUT_DIFFI = 0, TITLE_INPUT_NAME, INGAME, BATTLE, SHOP, ENDING
 	};
 
-	GameState gameState = GameState::TITLE;
+	GameState gameState = GameState::TITLE_INPUT_DIFFI;
+
+	int selectDifficulty = 0;
 	Difficulty difficulty;
+
 	Hero* player = nullptr;
 	Shop* shop = nullptr;
 	Dungeon* dungeon = nullptr;
 
 	void Init()
 	{
-		gTextRender = TextRender(100, 50);
+		gTextRender = TextRender(50, 100);
+
+		// TITLE 작업 == 한번만 하면됨
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      ----------------------------------------------------------     ");
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####  #####  #####  #####      #   #  #####  #####  #####     ");
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #        #    #      #   #      #   #  #      #   #  #   #     ");
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####    #    ###    #####      #####  ###    #####  #   #     ");
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      # #    #   #     ");
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      #  #   #   #     ");
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####    #    #####  #          #   #  #####  #   #  #####     ");
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "     -----------------------------------------------------------     ");
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
 	}
 
 	void Update()
 	{
 		switch (gameState)
 		{
-		case GameState::TITLE:
+		case GameState::TITLE_INPUT_DIFFI:
+		case GameState::TITLE_INPUT_NAME:
+			if (gInputKey.IsPressKey('w'))
+			{
+				selectDifficulty = (selectDifficulty + 2) % 3;
+			}
+			else if (gInputKey.IsPressKey('s'))
+			{
+				selectDifficulty = (selectDifficulty + 1) % 3;
+			}
+			else if (gInputKey.IsPressKey(13))
+			{
+				// ENTER
+				if (gameState == GameState::TITLE_INPUT_DIFFI)
+				{
+					gameState = GameState::TITLE_INPUT_NAME;
+				}
+				else if (gameState == GameState::TITLE_INPUT_NAME)
+				{
+					gInputKey.inputText;
+				}
+			}
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "                                ------                               ");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "                              ----  ----                             ");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "");
 
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      ----------------------------------------------------------     ");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####  #####  #####  #####      #   #  #####  #####  #####     ");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #        #    #      #   #      #   #  #      #   #  #   #     ");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####    #    ###    #####      #####  ###    #####  #   #     ");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      # #    #   #     ");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      #  #   #   #     ");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####    #    #####  #          #   #  #####  #   #  #####     ");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "     -----------------------------------------------------------     ");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, difficulty.name[selectDifficulty]);
 
+			if (gameState == GameState::TITLE_INPUT_DIFFI)
+			{
+				gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "");
+				gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "CHANGE :: W,S  SELECT :: ENTER");
+			}
 
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "                              ----  ----                             ");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "                                ------                               ");
 
+			
+			if (gameState == GameState::TITLE_INPUT_DIFFI) gInputKey.Request(InputKey::InputType::SELECT);
+			else if (gameState == GameState::TITLE_INPUT_NAME)
+			{
+				gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "");
+				gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "영웅의 이름을 입력해주세요");
+				gInputKey.Request(InputKey::InputType::TEXT);
+			}
 			break;
 		case GameState::INGAME:
 		case GameState::BATTLE:
@@ -1662,7 +1719,9 @@ struct StepHero
 	{
 		switch (gameState)
 		{
-		case GameState::TITLE:
+		case GameState::TITLE_INPUT_DIFFI:
+		case GameState::TITLE_INPUT_NAME:
+			gTextRender.Refresh(TextLayout::LayoutKind::TITLE);
 			gTextRender.Render(TextLayout::LayoutKind::TITLE);
 			break;
 		case GameState::INGAME:
@@ -1682,29 +1741,13 @@ struct StepHero
 
 int main()
 {
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      ----------------------------------------------------------     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####  #####  #####  #####      #   #  #####  #####  #####     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #        #    #      #   #      #   #  #      #   #  #   #     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####    #    ###    #####      #####  ###    #####  #   #     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      # #    #   #     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      #  #   #   #     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####    #    #####  #          #   #  #####  #   #  #####     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "     -----------------------------------------------------------     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
-
-	gTextRender.Render(TextLayout::LayoutKind::TITLE);
-	gInputKey.Requset(InputKey::InputType::ANYKEYS);
-	gInputKey.Requset(InputKey::InputType::SELECT);
-	gInputKey.Requset(InputKey::InputType::INGAME);
+	StepHero stepHero;
+	stepHero.Init();
 	while (1)
 	{
 		gInputKey.Update();
-		cout << gInputKey.inputResult << endl;
+		stepHero.Update();
+		stepHero.Render();
 	}
 
 	/*
