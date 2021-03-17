@@ -20,18 +20,18 @@ FileManager::~FileManager()
 {
 }
 
-void FileManager::InsertData(DataType dataType, int data)
+void FileManager::InsertData(FileManager::DataType dataType, int data)
 {
 	//Monster는 여기서 처리하지 않는다.
 	switch (dataType)
 	{
-	case FileManager::POS_X:
-	case FileManager::POS_Y:
-	case FileManager::GOLD:
-	case FileManager::DIFFICULTY:
+	case DataType::POS_X:
+	case DataType::POS_Y:
+	case DataType::GOLD:
+	case DataType::DIFFICULTY:
 		dataList[dataType] = data;
 		break;
-	case FileManager::ROOM_DATA:
+	case DataType::ROOM_DATA:
 		dataList[dataType] += to_string(data) + ",";
 		break;
 	}
@@ -74,20 +74,20 @@ void FileManager::DataClear()
 	}
 }
 
-int FileManager::GetData(DataType dataType, int index)
+int FileManager::GetData(FileManager::DataType dataType, int index)
 {
 	int data = 0, offset = -1;
 	string dataLine;
 	switch (dataType)
 	{
-	case FileManager::POS_X:
-	case FileManager::POS_Y:
-	case FileManager::GOLD:
-	case FileManager::MON_COUNT:
-	case FileManager::DIFFICULTY:
+	case DataType::POS_X:
+	case DataType::POS_Y:
+	case DataType::GOLD:
+	case DataType::MON_COUNT:
+	case DataType::DIFFICULTY:
 		data = stoi(dataList[dataType]);
 		break;
-	case FileManager::MON_POS_X:
+	case DataType::MON_POS_X:
 		// x1,x2
 		dataLine = dataList[DataType::MON_POS_X];
 		//dataLine = "0,1,2,3,4,5,6,7,8,9,10,";
@@ -97,7 +97,7 @@ int FileManager::GetData(DataType dataType, int index)
 		}
 		data = stoi(dataLine.substr(offset + 1, dataLine.find(',', offset+1) - offset - 1));
 		break;
-	case FileManager::MON_POS_Y:
+	case DataType::MON_POS_Y:
 		dataLine = dataList[DataType::MON_POS_Y];
 		//dataLine = "0,1,2,3,4,5,6,7,8,9,10,";
 		for (int i = 0; i < index; ++i)
@@ -106,7 +106,7 @@ int FileManager::GetData(DataType dataType, int index)
 		}
 		data = stoi(dataLine.substr(offset + 1, dataLine.find(',', offset + 1) - offset - 1));
 		break;
-	case FileManager::ROOM_DATA:
+	case DataType::ROOM_DATA:
 		dataLine = dataList[DataType::ROOM_DATA];
 		//dataLine = "0,1,2,3,4,5,6,7,8,9,10,";
 		for (int i = 0; i < index; ++i)

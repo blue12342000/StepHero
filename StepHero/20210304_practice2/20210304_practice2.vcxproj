@@ -50,7 +50,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -148,17 +148,37 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="20210304_practice2.cpp" />
+    <ClCompile Include="Dungeon.cpp" />
+    <ClCompile Include="DungeonTemplate.cpp" />
     <ClCompile Include="FileManager.cpp" />
+    <ClCompile Include="Hero.cpp" />
+    <ClCompile Include="KeyManager.cpp" />
+    <ClCompile Include="Monster.cpp" />
+    <ClCompile Include="MonsterTable.cpp" />
+    <ClCompile Include="Shop.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="StepHero.cpp" />
+    <ClCompile Include="TextRender.cpp" />
+    <ClCompile Include="Unit.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Dungeon.h" />
+    <ClInclude Include="DungeonTemplate.h" />
+    <ClInclude Include="Hero.h" />
+    <ClInclude Include="KeyManager.h" />
+    <ClInclude Include="Monster.h" />
+    <ClInclude Include="MonsterTable.h" />
+    <ClInclude Include="Shop.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="FileManager.h" />
+    <ClInclude Include="StepHero.h" />
+    <ClInclude Include="TextRender.h" />
+    <ClInclude Include="Unit.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
