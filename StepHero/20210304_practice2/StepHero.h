@@ -32,6 +32,7 @@ struct BattleItem
 struct BattleInfo
 {
 	bool isBattleEnd = false;
+	bool isWinnerA = false;
 	Unit* unitA = nullptr;
 	Unit* unitB = nullptr;
 
@@ -75,47 +76,47 @@ struct BattleInfo
 			{
 				// 패배
 				isBattleEnd = true;
+				isWinnerA = false;
+
+				if (unitA->HitDamage(unitB->GetAtk()))
+				{
+					// 몬스터에게 죽었다.
+					// GAME_OVER로 이동
+				}
+
+				Monster* monster = (Monster*)unitB;
+				gTextRender.InsertMessage(string(34, '='));
+				gTextRender.InsertMessage(":: " + gTextRender.MakeString("패 배", 28, TextBuffer::TextAlign::CENTER) + " ::");
+				gTextRender.InsertMessage(":: " + gTextRender.MakeString("", 28, TextBuffer::TextAlign::CENTER) + " ::");
+				gTextRender.InsertMessage(":: " + gTextRender.MakeString(to_string(monster->GetAtk()) + " 의 데미지를 받았습니다", 28, TextBuffer::TextAlign::CENTER) + " ::");
+				gTextRender.InsertMessage(":: " + gTextRender.MakeString("", 28, TextBuffer::TextAlign::CENTER) + " ::");
+				gTextRender.InsertMessage(":: " + gTextRender.MakeString("", 28, TextBuffer::TextAlign::CENTER) + " ::");
+				gTextRender.InsertMessage(":: " + gTextRender.MakeString("", 28, TextBuffer::TextAlign::CENTER) + " ::");
+				gTextRender.InsertMessage(string(34, '='));
 			}
 			else
 			{
 				// 승리
+				isWinnerA = true;
+
+				if (unitB->HitDamage(unitA->GetAtk()))
+				{
+					// 몬스터를 죽였다.
+					Monster* monster = (Monster*)unitB;
+					gTextRender.InsertMessage(string(34, '='));
+					gTextRender.InsertMessage(":: " + gTextRender.MakeString("승 리", 28, TextBuffer::TextAlign::CENTER) + " ::");
+					gTextRender.InsertMessage(":: " + gTextRender.MakeString("", 28, TextBuffer::TextAlign::CENTER) + " ::");
+					gTextRender.InsertMessage(":: " + gTextRender.MakeString(to_string(monster->rootGold) + " 골드 획득", 28, TextBuffer::TextAlign::CENTER) + " ::");
+					gTextRender.InsertMessage(":: " + gTextRender.MakeString("", 28, TextBuffer::TextAlign::CENTER) + " ::");
+					gTextRender.InsertMessage(":: " + gTextRender.MakeString(to_string(monster->rootExp) + " 경험치 획득", 28, TextBuffer::TextAlign::CENTER) + " ::");
+					gTextRender.InsertMessage(":: " + gTextRender.MakeString("", 28, TextBuffer::TextAlign::CENTER) + " ::");
+					gTextRender.InsertMessage(string(34, '='));
+				}
 			}
-				//if (playerInput == (monsterInput + 1) % 3)
-				//{
-				//	// 승리 처리
-				//	if (monster.HitDamage(player.attack) == 1)
-				//	{
-				//		// 죽었는가?
-				//		cout << ":::: " << monster.rootExp << " 경험치 획득!!" << endl;
-				//		cout << ":::: " << monster.rootGold << " 골드 획득!!" << endl;
-				//
-				//		player.gold += monster.rootGold;
-				//		int lvlUp = player.RootExp(monster.rootExp);
-				//		if (lvlUp)
-				//		{
-				//			cout << ":::: 플레이어 레벨이 " << lvlUp << " 올랐습니다." << endl;
-				//		}
-				//		dungeon.room[player.posY][player.posX].isMonster = false;
-				//		break;
-				//	}
-				//	else
-				//	{
-				//		cout << ":::: 몬스터에게 " << player.attack << " 데미지를 주었다." << endl;
-				//	}
-				//}
-				//else
-				//{
-				//	// 패배 처리
-				//	cout << right << setw(42) << "***  패  배  ***" << endl;
-				//	cout << "---------------------------------------------------------------------" << endl;
-				//	cout << ":::: 몬스터와의 전투에서 패배하였다" << endl;
-				//	cout << ":::: " << monster.attack << "의 데미지를 받았다!!" << endl;
-				//	if (player.HitDamage(monster.attack) == HeroState::DIE) break;
-				//}
 		}
 		else
 		{
-			// 승리 
+			// 배틀이 끝난 후 다음 프레임에 실행
 		}
 	}
 
@@ -158,7 +159,7 @@ struct BattleInfo
 
 	void RenderBattleLog()
 	{
-		gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::BOTTOM, "*** 가위! 바위! 보! ***");
+		if (frontLog != rearLog) gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::BOTTOM, "*** 가위! 바위! 보! ***");
 		while (frontLog != rearLog)
 		{
 			gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::BOTTOM, "");
@@ -170,7 +171,7 @@ struct BattleInfo
 				// 무승부
 				gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::BOTTOM, "*** 무 승 부 ***");
 			}
-			else if (item[battleLog[frontLog].useItemA].power < (item[battleLog[frontLog].useItemB].power + 1) % 3 )
+			else if (item[battleLog[frontLog].useItemA].power == (item[battleLog[frontLog].useItemB].power + 1) % 3 )
 			{
 				// 승리
 				gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::BOTTOM, "*** 승 리 ***");

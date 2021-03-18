@@ -15,7 +15,7 @@ Monster::~Monster()
 {
 }
 
-int Monster::HitDamage(int damage)
+bool Monster::HitDamage(int damage)
 {
 	hp -= damage;
 	if (hp <= 0)
@@ -23,5 +23,5 @@ int Monster::HitDamage(int damage)
 		hp = 0;
 		state = 1;
 	}
-	return state;
+	return (state == 1);
 }

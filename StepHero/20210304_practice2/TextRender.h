@@ -9,7 +9,12 @@ public:
 		LEFT, CENTER, RIGHT
 	};
 
-	bool isRefreshed = false;
+	enum WhenRefresh
+	{
+		NONE = 0, EVERYTIME, EXISTDATA
+	};
+
+	WhenRefresh whenRefresh = WhenRefresh::NONE;
 	TextAlign textAlign = TextAlign::LEFT;
 
 	int offset = 0;
@@ -22,11 +27,11 @@ public:
 	string buffer[100];
 
 	TextBuffer() {}
-	TextBuffer(TextAlign align, int offset, int rows, int cols, bool isRefreshed) :textAlign(align), offset(offset), rows(rows), cols(cols), isRefreshed(isRefreshed) {}
+	TextBuffer(TextAlign align, int offset, int rows, int cols, WhenRefresh whenRefresh) :textAlign(align), offset(offset), rows(rows), cols(cols), whenRefresh(whenRefresh) {}
 
 	bool IsRemainBuffer()
 	{
-		return dataCount > 0;
+		return (dataCount - lastRenderLine) > 0;
 	}
 
 	string* GetLine(int readPeek, bool isDefaultReturn = true)
@@ -44,7 +49,7 @@ public:
 			return str;
 		}
 		str = &buffer[(currPeek + localY) % 100];
-		++lastRenderLine;
+		lastRenderLine = localY + 1;
 		return str;
 	}
 
@@ -68,7 +73,7 @@ public:
 
 	void Clear()
 	{
-		if (isRefreshed)
+		if (whenRefresh != WhenRefresh::NONE)
 		{
 			currPeek = 0;
 			dataCount = 0;
@@ -78,12 +83,15 @@ public:
 
 	void Refresh()
 	{
-		if (isRefreshed)
+		if (whenRefresh != WhenRefresh::NONE)
 		{
-			currPeek = (currPeek + lastRenderLine) % 100;
-			dataCount -= lastRenderLine;
-			if (dataCount < 0) dataCount = 0;
-			lastRenderLine = 0;
+			if (!(whenRefresh == WhenRefresh::EXISTDATA && dataCount - lastRenderLine == 0))
+			{
+				currPeek = (currPeek + lastRenderLine) % 100;
+				dataCount -= lastRenderLine;
+				if (dataCount < 0) dataCount = 0;
+				lastRenderLine = 0;
+			}
 		}
 	}
 
@@ -141,25 +149,25 @@ public:
 		switch (layoutKind)
 		{
 		case LayoutKind::TITLE:
-			textBufferMap.insert(make_pair(LayoutPos::TOP, TextBuffer(TextBuffer::TextAlign::CENTER, 0, 16, 100, false)));
-			textBufferMap.insert(make_pair(LayoutPos::CONTENT, TextBuffer(TextBuffer::TextAlign::CENTER, 16, 9, 100, true)));
-			textBufferMap.insert(make_pair(LayoutPos::BOTTOM, TextBuffer(TextBuffer::TextAlign::LEFT, 25, 10, 100, true)));
+			textBufferMap.insert(make_pair(LayoutPos::TOP, TextBuffer(TextBuffer::TextAlign::CENTER, 0, 16, 100, TextBuffer::WhenRefresh::NONE)));
+			textBufferMap.insert(make_pair(LayoutPos::CONTENT, TextBuffer(TextBuffer::TextAlign::CENTER, 16, 9, 100, TextBuffer::WhenRefresh::EVERYTIME)));
+			textBufferMap.insert(make_pair(LayoutPos::BOTTOM, TextBuffer(TextBuffer::TextAlign::LEFT, 25, 10, 100, TextBuffer::WhenRefresh::EVERYTIME)));
 
 			textBufferTree = new TextBuffer*[3]{ &textBufferMap[LayoutPos::TOP], &textBufferMap[LayoutPos::CONTENT], &textBufferMap[LayoutPos::BOTTOM] };
 			size = 3;
 			break;
 		case LayoutKind::INGAME:
-			textBufferMap.insert(make_pair(LayoutPos::TOP, TextBuffer(TextBuffer::TextAlign::CENTER, 0, 8, 100, false)));
-			textBufferMap.insert(make_pair(LayoutPos::CONTENT, TextBuffer(TextBuffer::TextAlign::CENTER, 8, 22, 100, true)));
-			textBufferMap.insert(make_pair(LayoutPos::BOTTOM, TextBuffer(TextBuffer::TextAlign::LEFT, 30, 21, 100, true)));
+			textBufferMap.insert(make_pair(LayoutPos::TOP, TextBuffer(TextBuffer::TextAlign::CENTER, 0, 8, 100, TextBuffer::WhenRefresh::NONE)));
+			textBufferMap.insert(make_pair(LayoutPos::CONTENT, TextBuffer(TextBuffer::TextAlign::CENTER, 8, 22, 100, TextBuffer::WhenRefresh::EVERYTIME)));
+			textBufferMap.insert(make_pair(LayoutPos::BOTTOM, TextBuffer(TextBuffer::TextAlign::LEFT, 30, 21, 100, TextBuffer::WhenRefresh::EVERYTIME)));
 
 			textBufferTree = new TextBuffer*[3]{ &textBufferMap[LayoutPos::TOP], &textBufferMap[LayoutPos::CONTENT], &textBufferMap[LayoutPos::BOTTOM] };
 			size = 3;
 			break;
 		case LayoutKind::BATTLE:
-			textBufferMap.insert(make_pair(LayoutPos::TOP, TextBuffer(TextBuffer::TextAlign::CENTER, 0, 8, 100, false)));
-			textBufferMap.insert(make_pair(LayoutPos::CONTENT, TextBuffer(TextBuffer::TextAlign::CENTER, 8, 12, 100, true)));
-			textBufferMap.insert(make_pair(LayoutPos::BOTTOM, TextBuffer(TextBuffer::TextAlign::CENTER, 20, 31, 100, true)));
+			textBufferMap.insert(make_pair(LayoutPos::TOP, TextBuffer(TextBuffer::TextAlign::CENTER, 0, 8, 100, TextBuffer::WhenRefresh::NONE)));
+			textBufferMap.insert(make_pair(LayoutPos::CONTENT, TextBuffer(TextBuffer::TextAlign::CENTER, 8, 12, 100, TextBuffer::WhenRefresh::EXISTDATA)));
+			textBufferMap.insert(make_pair(LayoutPos::BOTTOM, TextBuffer(TextBuffer::TextAlign::CENTER, 20, 31, 100, TextBuffer::WhenRefresh::EVERYTIME)));
 
 			textBufferTree = new TextBuffer*[3]{ &textBufferMap[LayoutPos::TOP], &textBufferMap[LayoutPos::CONTENT], &textBufferMap[LayoutPos::BOTTOM] };
 			size = 3;
@@ -297,6 +305,10 @@ public:
 	string* frontBuffer = nullptr;
 	string* backBuffer = nullptr;
 
+	int frontMsg = 0;
+	int rearMsg = 0;
+	string messageBuffer[30];
+
 	TextLayout* textLayout = nullptr;
 
 	bool isAnimationRun = false;
@@ -316,10 +328,13 @@ public:
 	bool IsRemainBufferStr(TextLayout::LayoutKind layoutKind, TextLayout::LayoutPos layoutPos);
 
 	void AppendBuffer(TextLayout::LayoutKind layoutKind, TextLayout::LayoutPos layoutPos, string str);
+	void InsertMessage(string str);
+
 	void Clear(TextLayout::LayoutKind layoutKind);
 	void Refresh(TextLayout::LayoutKind layoutKind);
 	void Render();
 	void Render(TextLayout::LayoutKind layoutKind);
+	void RenderMergeMessage(TextLayout::LayoutKind layoutKind);
 
 	void RenderToBackBuffer(TextLayout::LayoutKind layoutKind);
 private:

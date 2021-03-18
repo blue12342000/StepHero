@@ -44,7 +44,7 @@ public:
 
 	int RootGold(int rootGold);
 
-	int HitDamage(int damage);
+	bool HitDamage(int damage);
 
 	bool IsPossibleUseGold(int needGold);
 

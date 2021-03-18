@@ -62,7 +62,7 @@ int Hero::RootGold(int rootGold)
 	return gold;
 }
 
-int Hero::HitDamage(int damage)
+bool Hero::HitDamage(int damage)
 {
 	hp -= damage;
 	if (hp <= 0)
@@ -71,7 +71,7 @@ int Hero::HitDamage(int damage)
 		state = HeroState::DIE;
 	}
 
-	return state;
+	return state == HeroState::DIE;
 }
 
 bool Hero::IsPossibleUseGold(int needGold)

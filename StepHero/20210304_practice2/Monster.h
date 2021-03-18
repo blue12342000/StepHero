@@ -20,6 +20,6 @@ public:
 	Monster(int lvl, int maxHP, int atk, int exp, int rootExp, int rootGold, string name);
 	~Monster();
 
-	int HitDamage(int damage);
+	bool HitDamage(int damage);
 };
 

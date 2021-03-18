@@ -85,6 +85,12 @@ void TextRender::AppendBuffer(TextLayout::LayoutKind layoutKind, TextLayout::Lay
 	textLayout[layoutKind].textBufferMap[layoutPos].PushBack(str);
 }
 
+void TextRender::InsertMessage(string str)
+{
+	if ((rearMsg + 1) % 30 != frontMsg)
+		messageBuffer[(rearMsg++) % 30] = str;
+}
+
 void TextRender::Clear(TextLayout::LayoutKind layoutKind)
 {
 	textLayout[layoutKind].Clear();
@@ -118,6 +124,45 @@ void TextRender::Render(TextLayout::LayoutKind layoutKind)
 			break;
 		}
 	}
+}
+
+void TextRender::RenderMergeMessage(TextLayout::LayoutKind layoutKind)
+{
+	int msgCount = 0, msgOffset = 0;
+	if (frontMsg <= rearMsg) msgCount = rearMsg - frontMsg;
+	else msgCount = rearMsg - frontMsg + 30;
+	msgOffset = (rows - msgCount) / 2;
+
+	for (int i = 0; i < rows; ++i)
+	{
+		string* line = textLayout[layoutKind].GetLine(i);
+		if (line != nullptr)
+		{
+			frontBuffer[i].replace(0, cols, *line);
+			if (i >= msgOffset && i < msgOffset + msgCount)
+			{
+				frontBuffer[i].replace((cols - messageBuffer[frontMsg].length()) / 2, messageBuffer[frontMsg].length(), messageBuffer[frontMsg]);
+				frontMsg = (frontMsg + 1) % 30;
+			}
+			cout << frontBuffer[i] << endl;
+		}
+		else
+		{
+			if (i >= msgOffset && i < msgOffset + msgCount)
+			{
+				frontBuffer[i] = string(cols, ' ');
+				frontBuffer[i].replace((cols - messageBuffer[frontMsg].length()) / 2, messageBuffer[frontMsg].length(), messageBuffer[frontMsg]);
+				frontMsg = (frontMsg + 1) % 30;
+				cout << frontBuffer[i] << endl;
+			}
+			else if (msgOffset + msgCount <= i)
+			{
+				break;
+			}
+		}
+	}
+	// 메세지 삭제
+	frontMsg = rearMsg;
 }
 
 void TextRender::RenderToBackBuffer(TextLayout::LayoutKind layoutKind)

@@ -290,11 +290,6 @@ void StepHero::Update()
 		}
 		break;
 	case GameState::INGAME_BATTLE:
-		if (gTextRender.IsRemainBufferStr(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::BOTTOM))
-		{
-			gKeyManager.Request(KeyManager::InputType::ANYKEYS);
-		}
-
 		battleInfo.Update();
 		break;
 	case GameState::INGAME_SHOP:
@@ -368,20 +363,44 @@ void StepHero::Render()
 		gTextRender.Render(TextLayout::LayoutKind::INGAME);
 		break;
 	case GameState::INGAME_BATTLE:
-
-		battleInfo.Render();
-
-		if (gTextRender.IsRemainBufferStr(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::BOTTOM))
+		if (battleInfo.rearLog != battleInfo.frontLog)
 		{
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::BOTTOM, gTextRender.MakeString(":: < 계속 > 아무키나 눌러주세요...", 100, TextBuffer::TextAlign::LEFT));
-		}
+			battleInfo.Render();
 
-		gTextRender.Refresh(TextLayout::LayoutKind::BATTLE);
-		gTextRender.Render(TextLayout::LayoutKind::BATTLE);
+			gKeyManager.Clear();
+			while (gTextRender.IsRemainBufferStr(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::BOTTOM))
+			{
+				// 전투정보가 아직남음
+
+				system("cls");
+				gTextRender.Refresh(TextLayout::LayoutKind::BATTLE);
+				gTextRender.Render(TextLayout::LayoutKind::BATTLE);
+
+				cout << gTextRender.MakeString(":: < 계속 > 아무키나 눌러주세요...", 100, TextBuffer::TextAlign::LEFT);
+
+				gKeyManager.Request(KeyManager::InputType::ANYKEYS);
+				gKeyManager.Update();
+			}
+
+			system("cls");
+			gTextRender.Refresh(TextLayout::LayoutKind::BATTLE);
+			gTextRender.RenderMergeMessage(TextLayout::LayoutKind::BATTLE);
+
+			cout << gTextRender.MakeString(":s: < 계속 > 아무키나 눌러주세요...", 100, TextBuffer::TextAlign::LEFT);
+
+			gKeyManager.Request(KeyManager::InputType::ANYKEYS);
+			gKeyManager.Update();
+		}
+		else
+		{
+			gTextRender.Refresh(TextLayout::LayoutKind::BATTLE);
+			gTextRender.Render(TextLayout::LayoutKind::BATTLE);
+		}
 		break;
 	case GameState::INGAME_SHOP:
 		break;
 	}
+	
 }
 
 bool StepHero::IsEnd()
