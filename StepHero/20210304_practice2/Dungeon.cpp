@@ -852,6 +852,11 @@ void Dungeon::Render(Hero* player, bool isDebug)
 {
 	SetLightMap(player);
 
+	for (int i = 0; i < 10 - (rows / 2); ++i)
+	{
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::CONTENT, "");
+	}
+
 	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::CONTENT, string(cols * 2 + 3, '=') + string(45 - (cols / 2), ' '));
 	for (int i = 0; i < rows; i++)		// yÃà
 	{

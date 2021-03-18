@@ -43,6 +43,24 @@ public:
 		return str;
 	}
 
+	string* PeekLine(int readPeek, bool isDefaultReturn = true)
+	{
+		int localY = readPeek - offset;
+		string* str = nullptr;
+		if (localY < 0 || localY >= dataCount)
+		{
+			if (isDefaultReturn && localY >= 0 && localY < rows)
+			{
+				buffer[(currPeek + localY) % 100] = string(cols, ' ');
+				str = &buffer[(currPeek + localY) % 100];
+				return str;
+			}
+			return str;
+		}
+		str = &buffer[(currPeek + localY) % 100];
+		return str;
+	}
+
 	void Refresh()
 	{
 		if (isRefreshed)
@@ -157,6 +175,27 @@ public:
 		return nullptr;
 	}
 
+	string* PeekLine(int readPeek)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			if (textBufferTree[i]->offset <= readPeek && readPeek < textBufferTree[i]->offset + textBufferTree[i]->rows)
+			{
+				string* line = nullptr;
+				if (i < size - 1)
+				{
+					line = textBufferTree[i]->PeekLine(readPeek);
+				}
+				else
+				{
+					line = textBufferTree[i]->PeekLine(readPeek, false);
+				}
+				return line;
+			}
+		}
+		return nullptr;
+	}
+
 	void Release()
 	{
 		delete[] textBufferTree;
@@ -171,27 +210,89 @@ class TextRender
 {
 public:
 
+	enum TextChangeAnim
+	{
+		FADE_OUT_IN, ZIGZAG_OUT_IN
+	};
+
+	struct AnimationInfo
+	{
+		TextChangeAnim animType;
+		TextLayout::LayoutKind fromLayout;
+		TextLayout::LayoutKind toLayout;
+
+		// 애니메이션 되는 시간
+		int animSec = 0;
+		// 현재 프레임
+		int currFrame = 0;
+		// 전체 프레임수
+		int totalFrame = 0;
+		// 1 / 1000 초당 몇프레임씩 진행되어야 하는지
+		double unitFrame = 0;
+
+		// 애니메이션 종류에 따른 사용하게되는 추가 데이터
+		int dataSize = 0;
+		void* animData = nullptr;
+
+		// 애니메이션 시작 시간
+		chrono::time_point<std::chrono::system_clock> startTime;
+
+		void Release()
+		{
+			if (animData)
+			{
+				switch (animType)
+				{
+				case TextRender::FADE_OUT_IN:
+					delete[] animData;
+					break;
+				case TextRender::ZIGZAG_OUT_IN:
+					break;
+				}
+				animData = nullptr;
+			}
+		}
+	};
+
 	int rows;
 	int cols;
 
-	string* buffer = nullptr;
+	string* frontBuffer = nullptr;
+	string* backBuffer = nullptr;
 
 	TextLayout* textLayout = nullptr;
 
+	bool isAnimationRun = false;
+	AnimationInfo animInfo;
 
 	TextRender();
 	TextRender(int rows, int cols);
 	~TextRender();
 
-	void BufferClear();
-	void BufferClear(int startOffset, int lines);
+	void FrontBufferClear();
+	void FrontBufferClear(int startOffset, int lines);
+
+	void BackBufferClear();
+	void BackBufferClear(int startOffset, int lines);
+
+	string MakeString(string str, int width, TextBuffer::TextAlign textAlign, int paddingLeft = 0, int paddingRight = 0);
 
 	void AppendBuffer(TextLayout::LayoutKind layoutKind, TextLayout::LayoutPos layoutPos, string str);
-
 	void Refresh(TextLayout::LayoutKind layoutKind);
-
+	void Render();
 	void Render(TextLayout::LayoutKind layoutKind);
 
+	void RenderToBackBuffer(TextLayout::LayoutKind layoutKind);
+private:
+	// 애니메이션 처리를 위한 내부함수
+	TextRender::AnimationInfo CreateAnimInfo(TextRender::TextChangeAnim animType, TextLayout::LayoutKind fromLayout, TextLayout::LayoutKind toLayout, int fps);
+
+public:
+	bool BufferChangeAnim();
+
+	void ChangeLayout(TextRender::TextChangeAnim animType, TextLayout::LayoutKind fromLayout, TextLayout::LayoutKind toLayout, int fps = 30);
+
+	void Update();
 	void Release();
 };
 

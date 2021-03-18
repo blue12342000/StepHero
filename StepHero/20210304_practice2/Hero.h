@@ -31,7 +31,7 @@ private:
 
 public:
 	Hero();
-	Hero(int lvl, int maxHP, int atk, int gold, int exp, float sight);
+	Hero(int lvl, int maxHP, int atk, int gold, int exp, float sight, string name);
 	~Hero();
 
 	void SetPosition(int x, int y);
@@ -60,6 +60,7 @@ public:
 
 	void Move(int x, int y);
 
+	void Render(TextLayout::LayoutKind layoutKind, TextLayout::LayoutPos layoutPos);
 	void Release();
 };
 

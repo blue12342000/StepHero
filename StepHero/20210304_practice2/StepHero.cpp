@@ -176,12 +176,11 @@ void StepHero::Update()
 			}
 			else if (gameState == GameState::TITLE_INPUT_NAME)
 			{
-				gameState = GameState::INGAME;
-				gKeyManager.inputText;
-
+				gameState = GameState::TIELE_INGAME_LODING;
+				
 				// 던저의 난이도와 영웅의 입력정보를 다 받았으니
 				// 게임을 위한 플레이어, 몬스터, 던전 생성
-				player = new Hero(1, difficulty.heroHP[selectDifficulty], 30, 1000, 0, 3.5f);
+				player = new Hero(1, difficulty.heroHP[selectDifficulty], 30, 1000, 0, 3.5f, gKeyManager.inputText);
 				player->SetPosition(0, 0);
 
 				gMonsterTable.Init(difficulty.monsterStrength[selectDifficulty]);
@@ -189,9 +188,27 @@ void StepHero::Update()
 				dungeon = new Dungeon();
 				dungeon->CreateDungeon(difficulty.dungeonSize[selectDifficulty]);
 				dungeon->SetMonsters(difficulty.monsterEncounter[selectDifficulty], player);
+
+				dungeon->Render(player, false);
+				// 플레이어 정보
+				gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, string(100, '='));
+				player->Render(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM);
+				// 시스템 로그
+				gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, string(100, '='));
+				gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: W, A, S ,D 로 이동해주세요...");
+
+				gTextRender.ChangeLayout(TextRender::TextChangeAnim::FADE_OUT_IN, TextLayout::LayoutKind::TITLE, TextLayout::LayoutKind::INGAME, 1000);
 			}
 		}
 		if (gameState == GameState::TITLE_INPUT_DIFFI) gKeyManager.Request(KeyManager::InputType::SELECT);
+		break;
+	case GameState::TIELE_INGAME_LODING:
+		gTextRender.Update();
+		if (!gTextRender.isAnimationRun)
+		{
+			gameState = GameState::INGAME;
+			gTextRender.Render(TextLayout::LayoutKind::INGAME);
+		}
 		break;
 	case GameState::INGAME:
 		if (gKeyManager.IsPressKey('w'))
@@ -264,8 +281,27 @@ void StepHero::Render()
 		gTextRender.Refresh(TextLayout::LayoutKind::TITLE);
 		gTextRender.Render(TextLayout::LayoutKind::TITLE);
 		break;
+	case GameState::TIELE_INGAME_LODING:
+		gTextRender.Render();
+		break;
 	case GameState::INGAME:
 		dungeon->Render(player, false);
+
+		// 플레이어 정보
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, string(100, '='));
+		player->Render(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM);
+		
+		// 시스템 로그
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, string(100, '='));
+		gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: W, A, S ,D 로 이동해주세요...");
+		if (gKeyManager.inputResult == KeyManager::InputResult::FAIL)
+		{
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, "");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: [ ERROR ]");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: 입력이 잘못되었습니다.");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: 한글로 되어있다면 한/영 키로 영어로 바꿔주세요.");
+
+		}
 
 		gTextRender.Refresh(TextLayout::LayoutKind::INGAME);
 		gTextRender.Render(TextLayout::LayoutKind::INGAME);

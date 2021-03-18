@@ -6,7 +6,7 @@ Hero::Hero()
 {
 }
 
-Hero::Hero(int lvl, int maxHP, int atk, int gold, int exp, float sight) :Unit("", lvl, maxHP, atk, exp), sight(sight)
+Hero::Hero(int lvl, int maxHP, int atk, int gold, int exp, float sight, string name) :Unit(name, lvl, maxHP, atk, exp), sight(sight)
 {
 }
 
@@ -127,6 +127,16 @@ void Hero::Move(int x, int y)
 {
 	posX = x;
 	posY = y;
+}
+
+void Hero::Render(TextLayout::LayoutKind layoutKind, TextLayout::LayoutPos layoutPos)
+{
+	gTextRender.AppendBuffer(layoutKind, layoutPos, gTextRender.MakeString("[[ " + name + " ]]", 23, TextBuffer::TextAlign::CENTER, 5));
+	gTextRender.AppendBuffer(layoutKind, layoutPos, string(5, ' ') + "레  벨 :" + gTextRender.MakeString(to_string(lvl), 15, TextBuffer::TextAlign::RIGHT));
+	gTextRender.AppendBuffer(layoutKind, layoutPos, string(5, ' ') + "공격력 :" + gTextRender.MakeString(to_string(atk), 15, TextBuffer::TextAlign::RIGHT));
+	gTextRender.AppendBuffer(layoutKind, layoutPos, string(5, ' ') + "체  력 :" + gTextRender.MakeString(string(to_string(hp) + " / " + to_string(maxHP)), 15, TextBuffer::TextAlign::RIGHT));
+	gTextRender.AppendBuffer(layoutKind, layoutPos, string(5, ' ') + "경험치 :" + gTextRender.MakeString(to_string(exp), 15, TextBuffer::TextAlign::RIGHT));
+	gTextRender.AppendBuffer(layoutKind, layoutPos, string(5, ' ') + "소지금 :" + gTextRender.MakeString(to_string(gold), 15, TextBuffer::TextAlign::RIGHT));
 }
 
 void Hero::Release()
