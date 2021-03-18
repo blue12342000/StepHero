@@ -24,6 +24,11 @@ public:
 	TextBuffer() {}
 	TextBuffer(TextAlign align, int offset, int rows, int cols, bool isRefreshed) :textAlign(align), offset(offset), rows(rows), cols(cols), isRefreshed(isRefreshed) {}
 
+	bool IsRemainBuffer()
+	{
+		return dataCount > 0;
+	}
+
 	string* GetLine(int readPeek, bool isDefaultReturn = true)
 	{
 		int localY = readPeek - offset;
@@ -61,12 +66,23 @@ public:
 		return str;
 	}
 
+	void Clear()
+	{
+		if (isRefreshed)
+		{
+			currPeek = 0;
+			dataCount = 0;
+			lastRenderLine = 0;
+		}
+	}
+
 	void Refresh()
 	{
 		if (isRefreshed)
 		{
 			currPeek = (currPeek + lastRenderLine) % 100;
 			dataCount -= lastRenderLine;
+			if (dataCount < 0) dataCount = 0;
 			lastRenderLine = 0;
 		}
 	}
@@ -127,9 +143,10 @@ public:
 		case LayoutKind::TITLE:
 			textBufferMap.insert(make_pair(LayoutPos::TOP, TextBuffer(TextBuffer::TextAlign::CENTER, 0, 16, 100, false)));
 			textBufferMap.insert(make_pair(LayoutPos::CONTENT, TextBuffer(TextBuffer::TextAlign::CENTER, 16, 9, 100, true)));
+			textBufferMap.insert(make_pair(LayoutPos::BOTTOM, TextBuffer(TextBuffer::TextAlign::LEFT, 25, 10, 100, true)));
 
-			textBufferTree = new TextBuffer*[2]{ &textBufferMap[LayoutPos::TOP], &textBufferMap[LayoutPos::CONTENT] };
-			size = 2;
+			textBufferTree = new TextBuffer*[3]{ &textBufferMap[LayoutPos::TOP], &textBufferMap[LayoutPos::CONTENT], &textBufferMap[LayoutPos::BOTTOM] };
+			size = 3;
 			break;
 		case LayoutKind::INGAME:
 			textBufferMap.insert(make_pair(LayoutPos::TOP, TextBuffer(TextBuffer::TextAlign::CENTER, 0, 8, 100, false)));
@@ -140,9 +157,23 @@ public:
 			size = 3;
 			break;
 		case LayoutKind::BATTLE:
+			textBufferMap.insert(make_pair(LayoutPos::TOP, TextBuffer(TextBuffer::TextAlign::CENTER, 0, 8, 100, false)));
+			textBufferMap.insert(make_pair(LayoutPos::CONTENT, TextBuffer(TextBuffer::TextAlign::CENTER, 8, 12, 100, true)));
+			textBufferMap.insert(make_pair(LayoutPos::BOTTOM, TextBuffer(TextBuffer::TextAlign::CENTER, 20, 31, 100, true)));
+
+			textBufferTree = new TextBuffer*[3]{ &textBufferMap[LayoutPos::TOP], &textBufferMap[LayoutPos::CONTENT], &textBufferMap[LayoutPos::BOTTOM] };
+			size = 3;
 			break;
 		case LayoutKind::SHOP:
 			break;
+		}
+	}
+
+	void Clear()
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			textBufferTree[i]->Clear();
 		}
 	}
 
@@ -168,6 +199,7 @@ public:
 				else
 				{
 					line = textBufferTree[i]->GetLine(readPeek, false);
+					if (!line) return nullptr;
 				}
 				return line;
 			}
@@ -224,7 +256,7 @@ public:
 		// 애니메이션 되는 시간
 		int animSec = 0;
 		// 현재 프레임
-		int currFrame = 0;
+		int currFrame = -1;
 		// 전체 프레임수
 		int totalFrame = 0;
 		// 1 / 1000 초당 몇프레임씩 진행되어야 하는지
@@ -239,6 +271,11 @@ public:
 
 		void Release()
 		{
+			animSec = 0;
+			currFrame = -1;
+			totalFrame = 0;
+			unitFrame = 0;
+			dataSize = 0;
 			if (animData)
 			{
 				switch (animType)
@@ -276,8 +313,10 @@ public:
 	void BackBufferClear(int startOffset, int lines);
 
 	string MakeString(string str, int width, TextBuffer::TextAlign textAlign, int paddingLeft = 0, int paddingRight = 0);
+	bool IsRemainBufferStr(TextLayout::LayoutKind layoutKind, TextLayout::LayoutPos layoutPos);
 
 	void AppendBuffer(TextLayout::LayoutKind layoutKind, TextLayout::LayoutPos layoutPos, string str);
+	void Clear(TextLayout::LayoutKind layoutKind);
 	void Refresh(TextLayout::LayoutKind layoutKind);
 	void Render();
 	void Render(TextLayout::LayoutKind layoutKind);
@@ -285,6 +324,8 @@ public:
 	void RenderToBackBuffer(TextLayout::LayoutKind layoutKind);
 private:
 	// 애니메이션 처리를 위한 내부함수
+	void BufferChangeShiftLeft(string& origin, const string& shiftStr, int shift, int fromOffstShiftStr);
+	void BufferChangeShiftRight(string& origin, const string& shiftStr, int shift, int fromOffstShiftStr);
 	TextRender::AnimationInfo CreateAnimInfo(TextRender::TextChangeAnim animType, TextLayout::LayoutKind fromLayout, TextLayout::LayoutKind toLayout, int fps);
 
 public:

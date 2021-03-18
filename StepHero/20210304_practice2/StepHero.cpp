@@ -139,6 +139,15 @@ void StepHero::Init()
 	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "      #####    #    #####  #          #   #  #####  #   #  #####     ");
 	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
 
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "####       #      #####    #####    #        #####");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "#   #     # #       #        #      #        #    ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "####     #   #      #        #      #        ###  ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "#   #    #####      #        #      #        #    ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "#   #    #   #      #        #      #        #    ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "####     #   #      #        #      #####    #####");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+
 	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
 	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #####  #####  #####  #####  #####  #   #    ##### #   # ##### ##### ");
 	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #   #  #   #    #      #    #   #  ##  #    #     #   # #   # #   # ");
@@ -147,12 +156,22 @@ void StepHero::Init()
 	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #      #   #    #      #    #   #  #  ##        # #   # #   # #     ");
 	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #      #####    #    #####  #####  #   #    ##### #   # ##### #     ");
 	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+
+	gTextRender.ChangeLayout(TextRender::TextChangeAnim::FADE_OUT_IN, TextLayout::LayoutKind::TITLE, TextLayout::LayoutKind::TITLE, 1000);
 }
 
 void StepHero::Update()
 {
 	switch (gameState)
 	{
+	case GameState::TITLE_LODING:
+		gTextRender.Update();
+		if (!gTextRender.isAnimationRun)
+		{
+			gameState = GameState::TITLE_INPUT_DIFFI;
+			gTextRender.Clear(TextLayout::LayoutKind::INGAME);
+		}
+		break;
 	case GameState::TITLE_INPUT_DIFFI:
 	case GameState::TITLE_INPUT_NAME:
 		if (gKeyManager.inputResult == KeyManager::InputResult::SUCCESS)
@@ -171,12 +190,13 @@ void StepHero::Update()
 				{
 					// ENTER
 					gameState = GameState::TITLE_INPUT_NAME;
+					gKeyManager.Clear();
 					gKeyManager.Request(KeyManager::InputType::TEXT);
 				}
 			}
 			else if (gameState == GameState::TITLE_INPUT_NAME)
 			{
-				gameState = GameState::TIELE_INGAME_LODING;
+				gameState = GameState::TITLE_INGAME_LODING;
 				
 				// 던저의 난이도와 영웅의 입력정보를 다 받았으니
 				// 게임을 위한 플레이어, 몬스터, 던전 생성
@@ -202,12 +222,12 @@ void StepHero::Update()
 		}
 		if (gameState == GameState::TITLE_INPUT_DIFFI) gKeyManager.Request(KeyManager::InputType::SELECT);
 		break;
-	case GameState::TIELE_INGAME_LODING:
+	case GameState::TITLE_INGAME_LODING:
 		gTextRender.Update();
 		if (!gTextRender.isAnimationRun)
 		{
 			gameState = GameState::INGAME;
-			gTextRender.Render(TextLayout::LayoutKind::INGAME);
+			gTextRender.Clear(TextLayout::LayoutKind::INGAME);
 		}
 		break;
 	case GameState::INGAME:
@@ -239,10 +259,43 @@ void StepHero::Update()
 				player->Move(player->GetPosX() + 1, player->GetPosY());
 			}
 		}
-		gKeyManager.Request(KeyManager::InputType::INGAME);
+
+		if (dungeon->IsInMonster(player->GetPosX(), player->GetPosY()))
+		{
+			// 몬스터와 조우
+			gameState = GameState::INGAME_BATTLE_LODING;
+			gKeyManager.Clear();
+
+			// 배틀정보 선입력
+			Monster* monster = gMonsterTable.GetMonster(dungeon->GetRoomFieldType(player->GetPosX(), player->GetPosY()));
+			battleInfo = BattleInfo(*player, *monster);
+
+			battleInfo.Render();
+			gTextRender.ChangeLayout(TextRender::TextChangeAnim::ZIGZAG_OUT_IN, TextLayout::LayoutKind::INGAME, TextLayout::LayoutKind::BATTLE, 1000);
+
+			// 현재 사용하지 않는 전투
+			//player->state = HeroState::BATTLE;
+		}
+		else
+		{
+			gKeyManager.Request(KeyManager::InputType::INGAME);
+		}
+		break;
+	case GameState::INGAME_BATTLE_LODING:
+		gTextRender.Update();
+		if (!gTextRender.isAnimationRun)
+		{
+			gameState = GameState::INGAME_BATTLE;
+			gTextRender.Clear(TextLayout::LayoutKind::BATTLE);
+		}
 		break;
 	case GameState::INGAME_BATTLE:
+		if (gTextRender.IsRemainBufferStr(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::BOTTOM))
+		{
+			gKeyManager.Request(KeyManager::InputType::ANYKEYS);
+		}
 
+		battleInfo.Update();
 		break;
 	case GameState::INGAME_SHOP:
 		break;
@@ -277,11 +330,20 @@ void StepHero::Render()
 			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "");
 			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "영웅의 이름을 입력해주세요");
 		}
+		else if (gKeyManager.inputResult == KeyManager::InputResult::FAIL)
+		{
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::BOTTOM, "");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::BOTTOM, ":: [ ERROR ]");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::BOTTOM, ":: 입력이 잘못되었습니다.");
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::BOTTOM, ":: 한글로 되어있다면 한/영 키로 영어로 바꿔주세요.");
+		}
 
 		gTextRender.Refresh(TextLayout::LayoutKind::TITLE);
 		gTextRender.Render(TextLayout::LayoutKind::TITLE);
 		break;
-	case GameState::TIELE_INGAME_LODING:
+	case GameState::TITLE_LODING:
+	case GameState::TITLE_INGAME_LODING:
+	case GameState::INGAME_BATTLE_LODING:
 		gTextRender.Render();
 		break;
 	case GameState::INGAME:
@@ -300,7 +362,6 @@ void StepHero::Render()
 			gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: [ ERROR ]");
 			gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: 입력이 잘못되었습니다.");
 			gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: 한글로 되어있다면 한/영 키로 영어로 바꿔주세요.");
-
 		}
 
 		gTextRender.Refresh(TextLayout::LayoutKind::INGAME);
@@ -308,6 +369,15 @@ void StepHero::Render()
 		break;
 	case GameState::INGAME_BATTLE:
 
+		battleInfo.Render();
+
+		if (gTextRender.IsRemainBufferStr(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::BOTTOM))
+		{
+			gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::BOTTOM, gTextRender.MakeString(":: < 계속 > 아무키나 눌러주세요...", 100, TextBuffer::TextAlign::LEFT));
+		}
+
+		gTextRender.Refresh(TextLayout::LayoutKind::BATTLE);
+		gTextRender.Render(TextLayout::LayoutKind::BATTLE);
 		break;
 	case GameState::INGAME_SHOP:
 		break;

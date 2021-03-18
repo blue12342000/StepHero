@@ -14,6 +14,6 @@ public:
 
 	// 몬스터 생성	
 	Monster* CreateMonster(int fieldType);
-	Monster GetMonster(Room::FieldType fieldType);
+	Monster* GetMonster(Room::FieldType fieldType);
 };
 

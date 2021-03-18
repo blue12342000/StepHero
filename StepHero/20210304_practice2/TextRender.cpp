@@ -75,9 +75,19 @@ string TextRender::MakeString(string str, int width, TextBuffer::TextAlign textA
 	return buffer;
 }
 
+bool TextRender::IsRemainBufferStr(TextLayout::LayoutKind layoutKind, TextLayout::LayoutPos layoutPos)
+{
+	return textLayout[layoutKind].textBufferMap[layoutPos].IsRemainBuffer();
+}
+
 void TextRender::AppendBuffer(TextLayout::LayoutKind layoutKind, TextLayout::LayoutPos layoutPos, string str)
 {
 	textLayout[layoutKind].textBufferMap[layoutPos].PushBack(str);
+}
+
+void TextRender::Clear(TextLayout::LayoutKind layoutKind)
+{
+	textLayout[layoutKind].Clear();
 }
 
 void TextRender::Refresh(TextLayout::LayoutKind layoutKind)
@@ -126,6 +136,16 @@ void TextRender::RenderToBackBuffer(TextLayout::LayoutKind layoutKind)
 	}
 }
 
+void TextRender::BufferChangeShiftLeft(string & origin, const string & shiftStr, int shift, int fromOffstShiftStr)
+{
+	origin = origin.substr(shift) + shiftStr.substr(fromOffstShiftStr, shift);
+}
+
+void TextRender::BufferChangeShiftRight(string & origin, const string & shiftStr, int shift, int fromOffstShiftStr)
+{
+	origin = shiftStr.substr(fromOffstShiftStr, shift) + origin.substr(0, origin.length() - shift);
+}
+
 TextRender::AnimationInfo TextRender::CreateAnimInfo(TextRender::TextChangeAnim animType, TextLayout::LayoutKind fromLayout, TextLayout::LayoutKind toLayout, int animSec)
 {
 	AnimationInfo animInfo = { animType, fromLayout, toLayout, animSec };
@@ -150,16 +170,18 @@ TextRender::AnimationInfo TextRender::CreateAnimInfo(TextRender::TextChangeAnim 
 		{
 			swap(data[rand() % size], data[rand() % size]);
 		}
+		animInfo.currFrame = -1;
 		animInfo.animData = data;
 		break;
 	case TextRender::ZIGZAG_OUT_IN:
-		size = cols * 1.5f;
-		animInfo.currFrame = 0;
+		size = cols;
+		animInfo.currFrame = -1;
 		animInfo.totalFrame = size;
 		animInfo.unitFrame = ((double)size) / animSec;
 		break;
 	}
 
+	BackBufferClear();
 	RenderToBackBuffer(toLayout);
 	return animInfo;
 }
@@ -179,10 +201,12 @@ bool TextRender::BufferChangeAnim()
 
 	chrono::time_point<chrono::system_clock> endTime;
 	std::chrono::duration<double> diff;
-	if (animInfo.currFrame == 0)
+	if (animInfo.currFrame == -1)
 	{
 		animInfo.startTime = chrono::system_clock::now();
-		++animInfo.currFrame;
+		endTime = chrono::system_clock::now();
+		diff = endTime - animInfo.startTime;
+		animInfo.currFrame = 0;
 		return true;
 	}
 	else
@@ -200,7 +224,7 @@ bool TextRender::BufferChangeAnim()
 		return false;
 	}
 
-	int offset = 0;
+	int deltaFrame = 0;
 	switch (animInfo.animType)
 	{
 	case TextRender::FADE_OUT_IN:
@@ -210,37 +234,21 @@ bool TextRender::BufferChangeAnim()
 		}
 		break;
 	case TextRender::ZIGZAG_OUT_IN:
+		deltaFrame = animInfo.unitFrame * deltaSec - animInfo.currFrame;
 		animInfo.currFrame = animInfo.unitFrame * deltaSec;
-		if (animInfo.currFrame < 1) animInfo.currFrame = 1;
-		offset = ((animInfo.currFrame * 4 / 3) % cols);
-		for (int i = 0; i < rows; ++i)
+		if (deltaFrame > 0)
 		{
-			if (animInfo.currFrame / (animInfo.totalFrame / 2) == 0)
+			for (int i = 0; i < rows; ++i)
 			{
-				// 기존데이터 삭제
 				if (i % 2 == 0)
 				{
 					// 왼쪽 방향으로 움직임
-					frontBuffer[i].replace(0, cols - offset, frontBuffer[i], offset, cols - offset);
+					BufferChangeShiftLeft(frontBuffer[i], backBuffer[i], deltaFrame, animInfo.currFrame);
 				}
 				else
 				{
 					//오른쪽
-					frontBuffer[i].replace(offset, cols - offset, frontBuffer[i], 0, cols - offset);
-				}
-			}
-			else
-			{
-				// 새데이터 들어옴
-				if (i % 2 == 0)
-				{
-					// 왼쪽
-					frontBuffer[i].replace(cols - offset, offset, backBuffer[i], 0, offset);
-				}
-				else
-				{
-					//오른쪽
-					frontBuffer[i].replace(0, offset, backBuffer[i], cols - offset, offset);
+					BufferChangeShiftRight(frontBuffer[i], backBuffer[i], deltaFrame, animInfo.currFrame);
 				}
 			}
 		}

@@ -35,13 +35,16 @@ void KeyManager::Update()
 		{
 		case InputType::ANYKEYS:
 			inputChar = tolower(_getch());
-			if (_kbhit()) _getch();
+			fflush(stdin);
+			//while (_kbhit() && (getchar()) != '\n');
 			isOK = true;
 			break;
 		case InputType::SELECT:
 		case InputType::INGAME:
 			inputChar = tolower(_getch());
-			if (_kbhit()) _getch();
+			fflush(stdin);
+
+			//while (_kbhit() && (getchar()) != '\n');
 			for (int i = 0; i < inputKeyRequest[requestBuffer[currRequest]].size; ++i)
 			{
 				if (inputChar == inputKeyRequest[requestBuffer[currRequest]].keyGroup[i])
@@ -51,8 +54,14 @@ void KeyManager::Update()
 			}
 			break;
 		case InputType::TEXT:
+
+			if (_kbhit())
+			{
+				int a = 0;
+			}
+
 			cout <<  setw(45) << "";
-			cin >> inputText;
+			getline(std::cin, inputText);
 			isOK = true;
 			break;
 		}
@@ -65,6 +74,11 @@ void KeyManager::Update()
 			currRequest = (currRequest + 1) % 5;
 			--requestCount;
 		}
+	}
+	else
+	{
+		//while (_kbhit() && (getchar()) != '\n');
+		fflush(stdin);
 	}
 }
 

@@ -21,6 +21,6 @@ public:
 	int GetExp();
 	string GetName();
 
-	virtual int HitDamage(int damage) = 0;
+	virtual int HitDamage(int damage) { return 0; };
 };
 

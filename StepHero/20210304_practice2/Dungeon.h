@@ -129,6 +129,9 @@ public:
 	void SetExit(int _exitPosX, int _exitPosY);
 
 	bool IsPossibleMove(int x, int y);
+	bool IsInMonster(int x, int y);
+
+	Room::FieldType GetRoomFieldType(int x, int y);
 
 	void SetLightMap(Hero* player);
 	void SetLightMap(int x, int y, float lightBright);

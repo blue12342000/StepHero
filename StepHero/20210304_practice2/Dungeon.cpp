@@ -256,7 +256,7 @@ void Dungeon::SetMonsters(int monsterEncount, Hero* player, int safeZoneSize)
 				}
 			}
 
-			if (rand() % 100 < monsterEncount) room[y][x].isMonster = true;
+			if (IsPossibleMove(x, y) && rand() % 100 < monsterEncount) room[y][x].isMonster = true;
 		}
 	}
 }
@@ -271,6 +271,16 @@ bool Dungeon::IsPossibleMove(int x, int y)
 {
 	if (x < 0 || y < 0 || x >= cols || y >= rows) return false;
 	return room[y][x].fieldType != Room::FieldType::wall && room[y][x].fieldType != Room::FieldType::fire;
+}
+
+bool Dungeon::IsInMonster(int x, int y)
+{
+	return room[y][x].isMonster;
+}
+
+Room::FieldType Dungeon::GetRoomFieldType(int x, int y)
+{
+	return room[y][x].fieldType;
 }
 
 void Dungeon::SetLightMap(Hero* player)

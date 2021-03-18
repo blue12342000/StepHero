@@ -36,7 +36,7 @@ Monster* MonsterTable::CreateMonster(int fieldType)
 	return new Monster(monster[fieldType][rand() % 4]);
 }
 
-Monster MonsterTable::GetMonster(Room::FieldType fieldType)
+Monster* MonsterTable::GetMonster(Room::FieldType fieldType)
 {
-	return monster[fieldType][rand() % 4];
+	return new Monster(monster[fieldType][rand() % 4]);
 }
