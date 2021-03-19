@@ -31,8 +31,13 @@ struct BattleItem
 
 struct BattleInfo
 {
-	bool isBattleEnd = false;
-	bool isWinnerA = false;
+	enum BattleState
+	{
+		READY, BATTLE, WIN, LOSE
+	};
+
+	BattleState state = BattleState::READY;
+
 	Unit* unitA = nullptr;
 	Unit* unitB = nullptr;
 
@@ -44,7 +49,7 @@ struct BattleInfo
 	BattleInfo() {}
 	BattleInfo(Unit& unitA, Unit& unitB) :unitA(&unitA), unitB(&unitB)
 	{
-		isBattleEnd = false;
+		state = BattleState::READY;
 		item[0] = { 0, "가위" };
 		item[1] = { 1, "바위" };
 		item[2] = { 2, " 보 " };
@@ -59,7 +64,11 @@ struct BattleInfo
 
 	void Update()
 	{
-		if (!isBattleEnd)
+		if (state == BattleState::READY)
+		{
+			state = BattleState::BATTLE;
+		}
+		else if (state == BattleState::BATTLE)
 		{
 			// 배틀
 			int playerInput = rand() % 3;
@@ -75,13 +84,12 @@ struct BattleInfo
 			if (playerInput != (monsterInput + 1) % 3)
 			{
 				// 패배
-				isBattleEnd = true;
-				isWinnerA = false;
-
 				if (unitA->HitDamage(unitB->GetAtk()))
 				{
 					// 몬스터에게 죽었다.
 					// GAME_OVER로 이동
+
+					state = BattleState::LOSE;
 				}
 
 				Monster* monster = (Monster*)unitB;
@@ -97,10 +105,10 @@ struct BattleInfo
 			else
 			{
 				// 승리
-				isWinnerA = true;
-
 				if (unitB->HitDamage(unitA->GetAtk()))
 				{
+					state = BattleState::WIN;
+
 					// 몬스터를 죽였다.
 					Monster* monster = (Monster*)unitB;
 					gTextRender.InsertMessage(string(34, '='));
@@ -113,10 +121,6 @@ struct BattleInfo
 					gTextRender.InsertMessage(string(34, '='));
 				}
 			}
-		}
-		else
-		{
-			// 배틀이 끝난 후 다음 프레임에 실행
 		}
 	}
 
@@ -193,7 +197,17 @@ public:
 
 	enum GameState
 	{
-		TITLE_LODING = 0, TITLE_INPUT_DIFFI, TITLE_INPUT_NAME, TITLE_INGAME_LODING, INGAME, INGAME_BATTLE_LODING, INGAME_BATTLE, INGAME_SHOP, ENDING
+		TITLE_LODING = 0,
+		TITLE_INPUT_DIFFI,
+		TITLE_INPUT_NAME,
+		TITLE_INGAME_LODING,
+		INGAME,
+		INGAME_BATTLE_LODING,
+		INGAME_BATTLE,
+		BATTLE_INGAME_LODING,
+		INGAME_SHOP,
+		GAMEOVER,
+		ENDING
 	};
 
 	GameState gameState = GameState::TITLE_LODING;

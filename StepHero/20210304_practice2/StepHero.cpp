@@ -157,6 +157,24 @@ void StepHero::Init()
 	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #      #####    #    #####  #####  #   #    ##### #   # ##### #     ");
 	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
 
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     #####     #####      #####         #        #####     #####     ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     #         #          #            # #       #   #     #         ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     ###       #####      #           #   #      #####     ###       ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     #             #      #           #####      #         #         ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     #             #      #           #   #      #         #         ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     #####     #####      #####       #   #      #         #####     ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "        #   #    ###    #     #       #####    #####   #####         ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "        #   #   #   #   #     #       #    #     #     #             ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "         # #   #     #  #     #       #     #    #     ###           ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "          #    #     #  #     #       #     #    #     #             ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "          #     #   #   #     #       #    #     #     #             ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "          #      ###     #####        #####    #####   #####         ");
+	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+
 	gTextRender.ChangeLayout(TextRender::TextChangeAnim::FADE_OUT_IN, TextLayout::LayoutKind::TITLE, TextLayout::LayoutKind::TITLE, 1000);
 }
 
@@ -235,6 +253,7 @@ void StepHero::Update()
 		{
 			if (dungeon->IsPossibleMove(player->GetPosX(), player->GetPosY() - 1))
 			{
+				player->SetState(Hero::HeroState::IDLE);
 				player->Move(player->GetPosX(), player->GetPosY() - 1);
 			}
 		}
@@ -242,6 +261,7 @@ void StepHero::Update()
 		{
 			if (dungeon->IsPossibleMove(player->GetPosX() - 1, player->GetPosY()))
 			{
+				player->SetState(Hero::HeroState::IDLE);
 				player->Move(player->GetPosX() - 1, player->GetPosY());
 			}
 		}
@@ -249,6 +269,7 @@ void StepHero::Update()
 		{
 			if (dungeon->IsPossibleMove(player->GetPosX(), player->GetPosY() + 1))
 			{
+				player->SetState(Hero::HeroState::IDLE);
 				player->Move(player->GetPosX(), player->GetPosY() + 1);
 			}
 		}
@@ -256,12 +277,15 @@ void StepHero::Update()
 		{
 			if (dungeon->IsPossibleMove(player->GetPosX() + 1, player->GetPosY()))
 			{
+				player->SetState(Hero::HeroState::IDLE);
 				player->Move(player->GetPosX() + 1, player->GetPosY());
 			}
 		}
 
-		if (dungeon->IsInMonster(player->GetPosX(), player->GetPosY()))
+		if (player->GetState() == Hero::HeroState::IDLE && dungeon->IsInMonster(player->GetPosX(), player->GetPosY()))
 		{
+			player->SetState(Hero::HeroState::BATTLE_BEGIN);
+
 			// 몬스터와 조우
 			gameState = GameState::INGAME_BATTLE_LODING;
 			gKeyManager.Clear();
@@ -272,9 +296,6 @@ void StepHero::Update()
 
 			battleInfo.Render();
 			gTextRender.ChangeLayout(TextRender::TextChangeAnim::ZIGZAG_OUT_IN, TextLayout::LayoutKind::INGAME, TextLayout::LayoutKind::BATTLE, 1000);
-
-			// 현재 사용하지 않는 전투
-			//player->state = HeroState::BATTLE;
 		}
 		else
 		{
@@ -290,7 +311,29 @@ void StepHero::Update()
 		}
 		break;
 	case GameState::INGAME_BATTLE:
+		if (battleInfo.state == BattleInfo::BattleState::WIN)
+		{
+			player->SetState(Hero::HeroState::BATTLE_END);
+
+			gameState = GameState::BATTLE_INGAME_LODING;
+			gTextRender.ChangeLayout(TextRender::TextChangeAnim::ZIGZAG_OUT_IN, TextLayout::LayoutKind::BATTLE, TextLayout::LayoutKind::INGAME, 1000);
+		}
+		else if(battleInfo.state == BattleInfo::BattleState::LOSE)
+		{
+			player->SetState(Hero::HeroState::BATTLE_END);
+
+			gameState = GameState::ENDING;
+			gTextRender.ChangeLayout(TextRender::TextChangeAnim::FADE_OUT_IN, TextLayout::LayoutKind::BATTLE, TextLayout::LayoutKind::GAMEOVER, 1000);
+		}
+		
 		battleInfo.Update();
+		break;
+	case GameState::BATTLE_INGAME_LODING:
+		gTextRender.Update();
+		if (!gTextRender.isAnimationRun)
+		{
+			gameState = GameState::INGAME;
+		}
 		break;
 	case GameState::INGAME_SHOP:
 		break;
@@ -339,6 +382,7 @@ void StepHero::Render()
 	case GameState::TITLE_LODING:
 	case GameState::TITLE_INGAME_LODING:
 	case GameState::INGAME_BATTLE_LODING:
+	case GameState::BATTLE_INGAME_LODING:
 		gTextRender.Render();
 		break;
 	case GameState::INGAME:
@@ -363,15 +407,13 @@ void StepHero::Render()
 		gTextRender.Render(TextLayout::LayoutKind::INGAME);
 		break;
 	case GameState::INGAME_BATTLE:
-		if (battleInfo.rearLog != battleInfo.frontLog)
+		battleInfo.Render();
+		if (battleInfo.state != BattleInfo::READY)
 		{
-			battleInfo.Render();
-
 			gKeyManager.Clear();
 			while (gTextRender.IsRemainBufferStr(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::BOTTOM))
 			{
-				// 전투정보가 아직남음
-
+				// 배틀로그가 아직남음
 				system("cls");
 				gTextRender.Refresh(TextLayout::LayoutKind::BATTLE);
 				gTextRender.Render(TextLayout::LayoutKind::BATTLE);
@@ -400,7 +442,6 @@ void StepHero::Render()
 	case GameState::INGAME_SHOP:
 		break;
 	}
-	
 }
 
 bool StepHero::IsEnd()

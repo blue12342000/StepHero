@@ -11,7 +11,7 @@ extern int G_LVL_EXP_TABLE[15][2];
 class Hero  :  public Unit
 {
 public:
-	enum HeroState { IDLE = 0, BATTLE, SHOP, DIE };
+	enum HeroState { IDLE = 0, BATTLE_BEGIN, BATTLE_END, SHOP, DIE };
 
 private:
 	int posX;
@@ -39,6 +39,9 @@ public:
 	int GetPosY();
 	int GetGold();
 	float GetSight();
+
+	Hero::HeroState GetState();
+	void SetState(Hero::HeroState state);
 
 	int RootExp(int rootExp);
 

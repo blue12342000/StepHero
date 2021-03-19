@@ -129,7 +129,7 @@ public:
 
 	enum LayoutKind
 	{
-		TITLE = 0, INGAME, BATTLE, SHOP, NONE
+		TITLE = 0, INGAME, BATTLE, SHOP, ENDING_WINNER, ENDING_ESCAPE, GAMEOVER, NONE
 	};
 
 	enum LayoutPos
@@ -173,6 +173,27 @@ public:
 			size = 3;
 			break;
 		case LayoutKind::SHOP:
+			break;
+		case LayoutKind::ENDING_WINNER:
+			textBufferMap.insert(make_pair(LayoutPos::TOP, TextBuffer(TextBuffer::TextAlign::CENTER, 0, 30, 100, TextBuffer::WhenRefresh::NONE)));
+			textBufferMap.insert(make_pair(LayoutPos::CONTENT, TextBuffer(TextBuffer::TextAlign::CENTER, 30, 20, 100, TextBuffer::WhenRefresh::EVERYTIME)));
+
+			textBufferTree = new TextBuffer*[2]{ &textBufferMap[LayoutPos::TOP], &textBufferMap[LayoutPos::CONTENT] };
+			size = 2;
+			break;
+		case LayoutKind::ENDING_ESCAPE:
+			textBufferMap.insert(make_pair(LayoutPos::TOP, TextBuffer(TextBuffer::TextAlign::CENTER, 0, 30, 100, TextBuffer::WhenRefresh::NONE)));
+			textBufferMap.insert(make_pair(LayoutPos::CONTENT, TextBuffer(TextBuffer::TextAlign::CENTER, 30, 20, 100, TextBuffer::WhenRefresh::EVERYTIME)));
+
+			textBufferTree = new TextBuffer*[2]{ &textBufferMap[LayoutPos::TOP], &textBufferMap[LayoutPos::CONTENT] };
+			size = 2;
+			break;
+		case LayoutKind::GAMEOVER:
+			textBufferMap.insert(make_pair(LayoutPos::TOP, TextBuffer(TextBuffer::TextAlign::CENTER, 0, 30, 100, TextBuffer::WhenRefresh::NONE)));
+			textBufferMap.insert(make_pair(LayoutPos::CONTENT, TextBuffer(TextBuffer::TextAlign::CENTER, 30, 20, 100, TextBuffer::WhenRefresh::EVERYTIME)));
+
+			textBufferTree = new TextBuffer*[2]{ &textBufferMap[LayoutPos::TOP], &textBufferMap[LayoutPos::CONTENT] };
+			size = 2;
 			break;
 		}
 	}

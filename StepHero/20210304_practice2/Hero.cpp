@@ -41,6 +41,16 @@ float Hero::GetSight()
 	return sight;
 }
 
+Hero::HeroState Hero::GetState()
+{
+	return state;
+}
+
+void Hero::SetState(Hero::HeroState state)
+{
+	this->state = state;
+}
+
 int Hero::RootExp(int rootExp)
 {
 	int lvlUp = 0;

@@ -57,6 +57,9 @@
     <ClCompile Include="Unit.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="PlayerManager.cpp">
+      <Filter>소스 파일\메니저</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -94,6 +97,9 @@
     </ClInclude>
     <ClInclude Include="Unit.h">
       <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerManager.h">
+      <Filter>소스 파일\메니저</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
