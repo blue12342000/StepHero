@@ -16,6 +16,18 @@
     <Filter Include="소스 파일\메니저">
       <UniqueIdentifier>{b9295508-e7ee-4d5c-b499-ae02b4849609}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\게임화면">
+      <UniqueIdentifier>{88991b9b-b75d-4040-a792-a482f4a77415}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\게임화면\화면기본">
+      <UniqueIdentifier>{32710f74-1aac-4936-b770-02236b920128}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\유닛">
+      <UniqueIdentifier>{a4998ab0-e6ca-464c-a0bf-790587eb10ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\유닛\기본">
+      <UniqueIdentifier>{877f0c38-b91c-4b03-b876-b445bbd8407a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="20210304_practice2.cpp">
@@ -25,12 +37,6 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Dungeon.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Hero.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Monster.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Shop.cpp">
@@ -48,17 +54,32 @@
     <ClCompile Include="StepHero.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="TextRender.cpp">
-      <Filter>소스 파일\메니저</Filter>
-    </ClCompile>
     <ClCompile Include="DungeonTemplate.cpp">
       <Filter>소스 파일\메니저</Filter>
     </ClCompile>
-    <ClCompile Include="Unit.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="PlayerManager.cpp">
+    <ClCompile Include="TextViewManager.cpp">
       <Filter>소스 파일\메니저</Filter>
+    </ClCompile>
+    <ClCompile Include="GameTitle.cpp">
+      <Filter>소스 파일\게임화면</Filter>
+    </ClCompile>
+    <ClCompile Include="GameData.cpp">
+      <Filter>소스 파일\메니저</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameDungeon.cpp">
+      <Filter>소스 파일\게임화면</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameBattle.cpp">
+      <Filter>소스 파일\게임화면</Filter>
+    </ClCompile>
+    <ClCompile Include="TextRender.cpp">
+      <Filter>소스 파일\메니저</Filter>
+    </ClCompile>
+    <ClCompile Include="Monster.cpp">
+      <Filter>소스 파일\유닛</Filter>
+    </ClCompile>
+    <ClCompile Include="Hero.cpp">
+      <Filter>소스 파일\유닛</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -66,12 +87,6 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Dungeon.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Hero.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Monster.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Shop.h">
@@ -89,17 +104,38 @@
     <ClInclude Include="StepHero.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="TextRender.h">
-      <Filter>소스 파일\메니저</Filter>
-    </ClInclude>
     <ClInclude Include="DungeonTemplate.h">
       <Filter>소스 파일\메니저</Filter>
     </ClInclude>
-    <ClInclude Include="Unit.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="PlayerManager.h">
+    <ClInclude Include="TextViewManager.h">
       <Filter>소스 파일\메니저</Filter>
+    </ClInclude>
+    <ClInclude Include="TextView.h">
+      <Filter>소스 파일\게임화면\화면기본</Filter>
+    </ClInclude>
+    <ClInclude Include="GameTitle.h">
+      <Filter>소스 파일\게임화면</Filter>
+    </ClInclude>
+    <ClInclude Include="GameData.h">
+      <Filter>소스 파일\메니저</Filter>
+    </ClInclude>
+    <ClInclude Include="InGameDungeon.h">
+      <Filter>소스 파일\게임화면</Filter>
+    </ClInclude>
+    <ClInclude Include="InGameBattle.h">
+      <Filter>소스 파일\게임화면</Filter>
+    </ClInclude>
+    <ClInclude Include="TextRender.h">
+      <Filter>소스 파일\메니저</Filter>
+    </ClInclude>
+    <ClInclude Include="Monster.h">
+      <Filter>소스 파일\유닛</Filter>
+    </ClInclude>
+    <ClInclude Include="Hero.h">
+      <Filter>소스 파일\유닛</Filter>
+    </ClInclude>
+    <ClInclude Include="Unit.h">
+      <Filter>소스 파일\유닛\기본</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

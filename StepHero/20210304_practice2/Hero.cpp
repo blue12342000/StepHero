@@ -121,32 +121,20 @@ void Hero::CreateLightMap(int rows, int cols)
 	}
 }
 
-void Hero::PrintHeroStatus()
-{
-	cout << "---------------------------------------------------------------------" << endl;
-	cout << "     [[ " << name << " ]]" << endl;
-	cout << "     레벨\t: " << right << setw(10) << lvl << endl;
-	cout << "     공격력\t: " << right << setw(10) << atk << endl;
-	cout << "     체력\t: " << right << setw(10) << string(to_string(hp) + " / " + to_string(maxHP)) << endl;
-	cout << "     경험치\t: " << right << setw(10) << exp << endl;
-	cout << "     소지금\t: " << right << setw(10) << gold << endl;
-	cout << "---------------------------------------------------------------------" << endl;
-}
-
 void Hero::Move(int x, int y)
 {
 	posX = x;
 	posY = y;
 }
 
-void Hero::Render(TextLayout::LayoutKind layoutKind, TextLayout::LayoutPos layoutPos)
+void Hero::Render(TextRender& view)
 {
-	gTextRender.AppendBuffer(layoutKind, layoutPos, gTextRender.MakeString("[[ " + name + " ]]", 23, TextBuffer::TextAlign::CENTER, 5));
-	gTextRender.AppendBuffer(layoutKind, layoutPos, string(5, ' ') + "레  벨 :" + gTextRender.MakeString(to_string(lvl), 15, TextBuffer::TextAlign::RIGHT));
-	gTextRender.AppendBuffer(layoutKind, layoutPos, string(5, ' ') + "공격력 :" + gTextRender.MakeString(to_string(atk), 15, TextBuffer::TextAlign::RIGHT));
-	gTextRender.AppendBuffer(layoutKind, layoutPos, string(5, ' ') + "체  력 :" + gTextRender.MakeString(string(to_string(hp) + " / " + to_string(maxHP)), 15, TextBuffer::TextAlign::RIGHT));
-	gTextRender.AppendBuffer(layoutKind, layoutPos, string(5, ' ') + "경험치 :" + gTextRender.MakeString(to_string(exp), 15, TextBuffer::TextAlign::RIGHT));
-	gTextRender.AppendBuffer(layoutKind, layoutPos, string(5, ' ') + "소지금 :" + gTextRender.MakeString(to_string(gold), 15, TextBuffer::TextAlign::RIGHT));
+	view.Write(view.TL_BOTTOM, string("     " + MakeString(TA_CENTER, 23, "[[ " + name + " ]]")));
+	view.Write(view.TL_BOTTOM, string("     레  벨 :" + MakeString(TA_RIGHT, 15, to_string(lvl))));
+	view.Write(view.TL_BOTTOM, string("     공격력 :" + MakeString(TA_RIGHT, 15, to_string(atk))));
+	view.Write(view.TL_BOTTOM, string("     체  력 :" + MakeString(TA_RIGHT, 15, string(to_string(hp) + " / " + to_string(maxHP)))));
+	view.Write(view.TL_BOTTOM, string("     경험치 :" + MakeString(TA_RIGHT, 15, to_string(exp))));
+	view.Write(view.TL_BOTTOM, string("     소지금 :" + MakeString(TA_RIGHT, 15, to_string(gold))));
 }
 
 void Hero::Release()

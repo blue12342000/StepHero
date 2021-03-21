@@ -29,8 +29,10 @@ public:
 private:
 	HeroState state = HeroState::IDLE;
 
-public:
+private:
 	Hero();
+
+public:
 	Hero(int lvl, int maxHP, int atk, int gold, int exp, float sight, string name);
 	~Hero();
 
@@ -59,11 +61,9 @@ public:
 
 	void CreateLightMap(int rows, int cols);
 
-	void PrintHeroStatus();
-
 	void Move(int x, int y);
 
-	void Render(TextLayout::LayoutKind layoutKind, TextLayout::LayoutPos layoutPos);
+	void Render(TextRender& view);
 	void Release();
 };
 

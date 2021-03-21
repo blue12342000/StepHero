@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "Dungeon.h"
 #include "MonsterTable.h"
 
 MonsterTable::MonsterTable()

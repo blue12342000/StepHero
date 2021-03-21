@@ -1,10 +1,8 @@
 #pragma once
 #include "Hero.h"
 #include "Monster.h"
-#include "TextRender.h"
 #include "DungeonTemplate.h"
 
-extern TextRender gTextRender;
 extern DungeonTemplate gDungeonTemplate[10];
 //던전 템플릿 파일 읽어들여서 로드
 
@@ -138,6 +136,7 @@ public:
 
 	//void PrintDungeon(Hero* player, bool isDebug = false);
 	void Update();
+	void Render(TextRender& view, Hero* player = nullptr);
 	void Render(Hero * player, bool isDebug);
 	void Release();
 };

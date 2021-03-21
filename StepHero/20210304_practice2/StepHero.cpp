@@ -115,345 +115,356 @@ void StepHero::Init()
 #pragma endregion
 
 	// TITLE 작업 == 한번만 하면됨
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      ----------------------------------------------------------     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####  #####  #####  #####      #   #  #####  #####  #####     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #        #    #      #   #      #   #  #      #   #  #   #     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####    #    ###    #####      #####  ###    #####  #   #     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      # #    #   #     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      #  #   #   #     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####    #    #####  #          #   #  #####  #   #  #####     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "     -----------------------------------------------------------     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      ----------------------------------------------------------     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####  #####  #####  #####      #   #  #####  #####  #####     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #        #    #      #   #      #   #  #      #   #  #   #     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####    #    ###    #####      #####  ###    #####  #   #     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      # #    #   #     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      #  #   #   #     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "      #####    #    #####  #          #   #  #####  #   #  #####     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "     -----------------------------------------------------------     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::TOP, "");
+	//
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "      #####  #####  #####  #####      #   #  #####  #####  #####     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "      #        #    #      #   #      #   #  #      #   #  #   #     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "      #####    #    ###    #####      #####  ###    #####  #   #     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      # #    #   #     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      #  #   #   #     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "      #####    #    #####  #          #   #  #####  #   #  #####     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	//
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "####       #      #####    #####    #        #####");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "#   #     # #       #        #      #        #    ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "####     #   #      #        #      #        ###  ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "#   #    #####      #        #      #        #    ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "#   #    #   #      #        #      #        #    ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "####     #   #      #        #      #####    #####");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	//
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #####  #####  #####  #####  #####  #   #    ##### #   # ##### ##### ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #   #  #   #    #      #    #   #  ##  #    #     #   # #   # #   # ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #####  #   #    #      #    #   #  # # #    ##### ##### #   # ##### ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #      #   #    #      #    #   #  # # #        # #   # #   # #     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #      #   #    #      #    #   #  #  ##        # #   # #   # #     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #      #####    #    #####  #####  #   #    ##### #   # ##### #     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	//
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     #####     #####      #####         #        #####     #####     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     #         #          #            # #       #   #     #         ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     ###       #####      #           #   #      #####     ###       ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     #             #      #           #####      #         #         ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     #             #      #           #   #      #         #         ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     #####     #####      #####       #   #      #         #####     ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	//
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "        #   #    ###    #     #       #####    #####   #####         ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "        #   #   #   #   #     #       #    #     #     #             ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "         # #   #     #  #     #       #     #    #     ###           ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "          #    #     #  #     #       #     #    #     #             ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "          #     #   #   #     #       #    #     #     #             ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "          #      ###     #####        #####    #####   #####         ");
+	//gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	//
+	//gTextRender.ChangeLayout(TextRender::TextChangeAnim::FADE_OUT_IN, TextLayout::LayoutKind::TITLE, TextLayout::LayoutKind::TITLE, 1000);
 
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "      #####  #####  #####  #####      #   #  #####  #####  #####     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "      #        #    #      #   #      #   #  #      #   #  #   #     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "      #####    #    ###    #####      #####  ###    #####  #   #     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      # #    #   #     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "          #    #    #      #          #   #  #      #  #   #   #     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "      #####    #    #####  #          #   #  #####  #   #  #####     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
+	gTextViewManager.Init(100, 50);
+	gTextViewManager.AddTextView(gTextViewManager.VT_TITLE, new GameTitle(100, 50));
+	gTextViewManager.AddTextView(gTextViewManager.VT_INGAME, new InGameDungeon(100, 50));
+	gTextViewManager.AddTextView(gTextViewManager.VT_BATTLE, new InGameBattle(100, 50));
 
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "####       #      #####    #####    #        #####");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "#   #     # #       #        #      #        #    ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "####     #   #      #        #      #        ###  ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "#   #    #####      #        #      #        #    ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "#   #    #   #      #        #      #        #    ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "####     #   #      #        #      #####    #####");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
-
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #####  #####  #####  #####  #####  #   #    ##### #   # ##### ##### ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #   #  #   #    #      #    #   #  ##  #    #     #   # #   # #   # ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #####  #   #    #      #    #   #  # # #    ##### ##### #   # ##### ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #      #   #    #      #    #   #  # # #        # #   # #   # #     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #      #   #    #      #    #   #  #  ##        # #   # #   # #     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, " #      #####    #    #####  #####  #   #    ##### #   # ##### #     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::SHOP, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
-
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     #####     #####      #####         #        #####     #####     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     #         #          #            # #       #   #     #         ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     ###       #####      #           #   #      #####     ###       ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     #             #      #           #####      #         #         ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     #             #      #           #   #      #         #         ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "     #####     #####      #####       #   #      #         #####     ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::ENDING_ESCAPE, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
-
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "        #   #    ###    #     #       #####    #####   #####         ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "        #   #   #   #   #     #       #    #     #     #             ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "         # #   #     #  #     #       #     #    #     ###           ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "          #    #     #  #     #       #     #    #     #             ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "          #     #   #   #     #       #    #     #     #             ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "          #      ###     #####        #####    #####   #####         ");
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::GAMEOVER, TextLayout::LayoutPos::TOP, "---------------------------------------------------------------------");
-
-	gTextRender.ChangeLayout(TextRender::TextChangeAnim::FADE_OUT_IN, TextLayout::LayoutKind::TITLE, TextLayout::LayoutKind::TITLE, 1000);
+	gTextViewManager.ChangeView(gTextViewManager.VT_TITLE, gTextViewManager.AT_FADE_OUT_IN, 1000);
 }
 
 void StepHero::Update()
 {
-	switch (gameState)
-	{
-	case GameState::TITLE_LODING:
-		gTextRender.Update();
-		if (!gTextRender.isAnimationRun)
-		{
-			gameState = GameState::TITLE_INPUT_DIFFI;
-			gTextRender.Clear(TextLayout::LayoutKind::INGAME);
-		}
-		break;
-	case GameState::TITLE_INPUT_DIFFI:
-	case GameState::TITLE_INPUT_NAME:
-		if (gKeyManager.inputResult == KeyManager::InputResult::SUCCESS)
-		{
-			if (gameState == GameState::TITLE_INPUT_DIFFI)
-			{
-				if (gKeyManager.IsPressKey('w'))
-				{
-					selectDifficulty = (selectDifficulty + 2) % 3;
-				}
-				else if (gKeyManager.IsPressKey('s'))
-				{
-					selectDifficulty = (selectDifficulty + 1) % 3;
-				}
-				else if (gKeyManager.IsPressKey(13))
-				{
-					// ENTER
-					gameState = GameState::TITLE_INPUT_NAME;
-					gKeyManager.Clear();
-					gKeyManager.Request(KeyManager::InputType::TEXT);
-				}
-			}
-			else if (gameState == GameState::TITLE_INPUT_NAME)
-			{
-				gameState = GameState::TITLE_INGAME_LODING;
-				
-				// 던저의 난이도와 영웅의 입력정보를 다 받았으니
-				// 게임을 위한 플레이어, 몬스터, 던전 생성
-				player = new Hero(1, difficulty.heroHP[selectDifficulty], 30, 1000, 0, 3.5f, gKeyManager.inputText);
-				player->SetPosition(0, 0);
+	gTextViewManager.Update();
 
-				gMonsterTable.Init(difficulty.monsterStrength[selectDifficulty]);
-
-				dungeon = new Dungeon();
-				dungeon->CreateDungeon(difficulty.dungeonSize[selectDifficulty]);
-				dungeon->SetMonsters(difficulty.monsterEncounter[selectDifficulty], player);
-
-				dungeon->Render(player, false);
-				// 플레이어 정보
-				gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, string(100, '='));
-				player->Render(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM);
-				// 시스템 로그
-				gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, string(100, '='));
-				gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: W, A, S ,D 로 이동해주세요...");
-
-				gTextRender.ChangeLayout(TextRender::TextChangeAnim::FADE_OUT_IN, TextLayout::LayoutKind::TITLE, TextLayout::LayoutKind::INGAME, 1000);
-			}
-		}
-		if (gameState == GameState::TITLE_INPUT_DIFFI) gKeyManager.Request(KeyManager::InputType::SELECT);
-		break;
-	case GameState::TITLE_INGAME_LODING:
-		gTextRender.Update();
-		if (!gTextRender.isAnimationRun)
-		{
-			gameState = GameState::INGAME;
-			gTextRender.Clear(TextLayout::LayoutKind::INGAME);
-		}
-		break;
-	case GameState::INGAME:
-		if (gKeyManager.IsPressKey('w'))
-		{
-			if (dungeon->IsPossibleMove(player->GetPosX(), player->GetPosY() - 1))
-			{
-				player->SetState(Hero::HeroState::IDLE);
-				player->Move(player->GetPosX(), player->GetPosY() - 1);
-			}
-		}
-		else if (gKeyManager.IsPressKey('a'))
-		{
-			if (dungeon->IsPossibleMove(player->GetPosX() - 1, player->GetPosY()))
-			{
-				player->SetState(Hero::HeroState::IDLE);
-				player->Move(player->GetPosX() - 1, player->GetPosY());
-			}
-		}
-		else if (gKeyManager.IsPressKey('s'))
-		{
-			if (dungeon->IsPossibleMove(player->GetPosX(), player->GetPosY() + 1))
-			{
-				player->SetState(Hero::HeroState::IDLE);
-				player->Move(player->GetPosX(), player->GetPosY() + 1);
-			}
-		}
-		else if (gKeyManager.IsPressKey('d'))
-		{
-			if (dungeon->IsPossibleMove(player->GetPosX() + 1, player->GetPosY()))
-			{
-				player->SetState(Hero::HeroState::IDLE);
-				player->Move(player->GetPosX() + 1, player->GetPosY());
-			}
-		}
-
-		if (player->GetState() == Hero::HeroState::IDLE && dungeon->IsInMonster(player->GetPosX(), player->GetPosY()))
-		{
-			player->SetState(Hero::HeroState::BATTLE_BEGIN);
-
-			// 몬스터와 조우
-			gameState = GameState::INGAME_BATTLE_LODING;
-			gKeyManager.Clear();
-
-			// 배틀정보 선입력
-			Monster* monster = gMonsterTable.GetMonster(dungeon->GetRoomFieldType(player->GetPosX(), player->GetPosY()));
-			battleInfo = BattleInfo(*player, *monster);
-
-			battleInfo.Render();
-			gTextRender.ChangeLayout(TextRender::TextChangeAnim::ZIGZAG_OUT_IN, TextLayout::LayoutKind::INGAME, TextLayout::LayoutKind::BATTLE, 1000);
-		}
-		else
-		{
-			gKeyManager.Request(KeyManager::InputType::INGAME);
-		}
-		break;
-	case GameState::INGAME_BATTLE_LODING:
-		gTextRender.Update();
-		if (!gTextRender.isAnimationRun)
-		{
-			gameState = GameState::INGAME_BATTLE;
-			gTextRender.Clear(TextLayout::LayoutKind::BATTLE);
-		}
-		break;
-	case GameState::INGAME_BATTLE:
-		if (battleInfo.state == BattleInfo::BattleState::WIN)
-		{
-			player->SetState(Hero::HeroState::BATTLE_END);
-
-			gameState = GameState::BATTLE_INGAME_LODING;
-			gTextRender.ChangeLayout(TextRender::TextChangeAnim::ZIGZAG_OUT_IN, TextLayout::LayoutKind::BATTLE, TextLayout::LayoutKind::INGAME, 1000);
-		}
-		else if(battleInfo.state == BattleInfo::BattleState::LOSE)
-		{
-			player->SetState(Hero::HeroState::BATTLE_END);
-
-			gameState = GameState::ENDING;
-			gTextRender.ChangeLayout(TextRender::TextChangeAnim::FADE_OUT_IN, TextLayout::LayoutKind::BATTLE, TextLayout::LayoutKind::GAMEOVER, 1000);
-		}
-		
-		battleInfo.Update();
-		break;
-	case GameState::BATTLE_INGAME_LODING:
-		gTextRender.Update();
-		if (!gTextRender.isAnimationRun)
-		{
-			gameState = GameState::INGAME;
-		}
-		break;
-	case GameState::INGAME_SHOP:
-		break;
-	}
+	//switch (gameState)
+	//{
+	//case GameState::TITLE_LODING:
+	//	gTextRender.Update();
+	//	if (!gTextRender.isAnimationRun)
+	//	{
+	//		gameState = GameState::TITLE_INPUT_DIFFI;
+	//		gTextRender.Clear(TextLayout::LayoutKind::INGAME);
+	//	}
+	//	break;
+	//case GameState::TITLE_INPUT_DIFFI:
+	//case GameState::TITLE_INPUT_NAME:
+	//	if (gKeyManager.inputResult == KeyManager::InputResult::SUCCESS)
+	//	{
+	//		if (gameState == GameState::TITLE_INPUT_DIFFI)
+	//		{
+	//			if (gKeyManager.IsPressKey('w'))
+	//			{
+	//				selectDifficulty = (selectDifficulty + 2) % 3;
+	//			}
+	//			else if (gKeyManager.IsPressKey('s'))
+	//			{
+	//				selectDifficulty = (selectDifficulty + 1) % 3;
+	//			}
+	//			else if (gKeyManager.IsPressKey(13))
+	//			{
+	//				// ENTER
+	//				gameState = GameState::TITLE_INPUT_NAME;
+	//				gKeyManager.Clear();
+	//				gKeyManager.Request(KeyManager::InputType::TEXT);
+	//			}
+	//		}
+	//		else if (gameState == GameState::TITLE_INPUT_NAME)
+	//		{
+	//			gameState = GameState::TITLE_INGAME_LODING;
+	//			
+	//			// 던저의 난이도와 영웅의 입력정보를 다 받았으니
+	//			// 게임을 위한 플레이어, 몬스터, 던전 생성
+	//			player = new Hero(1, difficulty.heroHP[selectDifficulty], 30, 1000, 0, 3.5f, gKeyManager.inputText);
+	//			player->SetPosition(0, 0);
+	//
+	//			gMonsterTable.Init(difficulty.monsterStrength[selectDifficulty]);
+	//
+	//			dungeon = new Dungeon();
+	//			dungeon->CreateDungeon(difficulty.dungeonSize[selectDifficulty]);
+	//			dungeon->SetMonsters(difficulty.monsterEncounter[selectDifficulty], player);
+	//
+	//			dungeon->Render(player, false);
+	//			// 플레이어 정보
+	//			gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, string(100, '='));
+	//			player->Render(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM);
+	//			// 시스템 로그
+	//			gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, string(100, '='));
+	//			gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: W, A, S ,D 로 이동해주세요...");
+	//
+	//			gTextRender.ChangeLayout(TextRender::TextChangeAnim::FADE_OUT_IN, TextLayout::LayoutKind::TITLE, TextLayout::LayoutKind::INGAME, 1000);
+	//		}
+	//	}
+	//	if (gameState == GameState::TITLE_INPUT_DIFFI) gKeyManager.Request(KeyManager::InputType::SELECT);
+	//	break;
+	//case GameState::TITLE_INGAME_LODING:
+	//	gTextRender.Update();
+	//	if (!gTextRender.isAnimationRun)
+	//	{
+	//		gameState = GameState::INGAME;
+	//		gTextRender.Clear(TextLayout::LayoutKind::INGAME);
+	//	}
+	//	break;
+	//case GameState::INGAME:
+	//	if (gKeyManager.IsPressKey('w'))
+	//	{
+	//		if (dungeon->IsPossibleMove(player->GetPosX(), player->GetPosY() - 1))
+	//		{
+	//			player->SetState(Hero::HeroState::IDLE);
+	//			player->Move(player->GetPosX(), player->GetPosY() - 1);
+	//		}
+	//	}
+	//	else if (gKeyManager.IsPressKey('a'))
+	//	{
+	//		if (dungeon->IsPossibleMove(player->GetPosX() - 1, player->GetPosY()))
+	//		{
+	//			player->SetState(Hero::HeroState::IDLE);
+	//			player->Move(player->GetPosX() - 1, player->GetPosY());
+	//		}
+	//	}
+	//	else if (gKeyManager.IsPressKey('s'))
+	//	{
+	//		if (dungeon->IsPossibleMove(player->GetPosX(), player->GetPosY() + 1))
+	//		{
+	//			player->SetState(Hero::HeroState::IDLE);
+	//			player->Move(player->GetPosX(), player->GetPosY() + 1);
+	//		}
+	//	}
+	//	else if (gKeyManager.IsPressKey('d'))
+	//	{
+	//		if (dungeon->IsPossibleMove(player->GetPosX() + 1, player->GetPosY()))
+	//		{
+	//			player->SetState(Hero::HeroState::IDLE);
+	//			player->Move(player->GetPosX() + 1, player->GetPosY());
+	//		}
+	//	}
+	//
+	//	if (player->GetState() == Hero::HeroState::IDLE && dungeon->IsInMonster(player->GetPosX(), player->GetPosY()))
+	//	{
+	//		player->SetState(Hero::HeroState::BATTLE_BEGIN);
+	//
+	//		// 몬스터와 조우
+	//		gameState = GameState::INGAME_BATTLE_LODING;
+	//		gKeyManager.Clear();
+	//
+	//		// 배틀정보 선입력
+	//		Monster* monster = gMonsterTable.GetMonster(dungeon->GetRoomFieldType(player->GetPosX(), player->GetPosY()));
+	//		battleInfo = BattleInfo(*player, *monster);
+	//
+	//		battleInfo.Render();
+	//		gTextRender.ChangeLayout(TextRender::TextChangeAnim::ZIGZAG_OUT_IN, TextLayout::LayoutKind::INGAME, TextLayout::LayoutKind::BATTLE, 1000);
+	//	}
+	//	else
+	//	{
+	//		gKeyManager.Request(KeyManager::InputType::INGAME);
+	//	}
+	//	break;
+	//case GameState::INGAME_BATTLE_LODING:
+	//	gTextRender.Update();
+	//	if (!gTextRender.isAnimationRun)
+	//	{
+	//		gameState = GameState::INGAME_BATTLE;
+	//		gTextRender.Clear(TextLayout::LayoutKind::BATTLE);
+	//	}
+	//	break;
+	//case GameState::INGAME_BATTLE:
+	//	if (battleInfo.state == BattleInfo::BattleState::WIN)
+	//	{
+	//		player->SetState(Hero::HeroState::BATTLE_END);
+	//
+	//		gameState = GameState::BATTLE_INGAME_LODING;
+	//		gTextRender.ChangeLayout(TextRender::TextChangeAnim::ZIGZAG_OUT_IN, TextLayout::LayoutKind::BATTLE, TextLayout::LayoutKind::INGAME, 1000);
+	//	}
+	//	else if(battleInfo.state == BattleInfo::BattleState::LOSE)
+	//	{
+	//		player->SetState(Hero::HeroState::BATTLE_END);
+	//
+	//		gameState = GameState::ENDING;
+	//		gTextRender.ChangeLayout(TextRender::TextChangeAnim::FADE_OUT_IN, TextLayout::LayoutKind::BATTLE, TextLayout::LayoutKind::GAMEOVER, 1000);
+	//	}
+	//	
+	//	battleInfo.Update();
+	//	break;
+	//case GameState::BATTLE_INGAME_LODING:
+	//	gTextRender.Update();
+	//	if (!gTextRender.isAnimationRun)
+	//	{
+	//		gameState = GameState::INGAME;
+	//	}
+	//	break;
+	//case GameState::INGAME_SHOP:
+	//	break;
+	//}
 }
 
 void StepHero::Render()
 {
-	switch (gameState)
-	{
-	case GameState::TITLE_INPUT_DIFFI:
-	case GameState::TITLE_INPUT_NAME:
-
-		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "                                ------                               ");
-		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "                              ----  ----                             ");
-		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "");
-
-		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, difficulty.name[selectDifficulty]);
-
-		if (gameState == GameState::TITLE_INPUT_DIFFI)
-		{
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "CHANGE :: W,S  SELECT :: ENTER");
-		}
-
-		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "");
-		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "                              ----  ----                             ");
-		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "                                ------                               ");
-
-		if (gameState == GameState::TITLE_INPUT_NAME)
-		{
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "영웅의 이름을 입력해주세요");
-		}
-		else if (gKeyManager.inputResult == KeyManager::InputResult::FAIL)
-		{
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::BOTTOM, "");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::BOTTOM, ":: [ ERROR ]");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::BOTTOM, ":: 입력이 잘못되었습니다.");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::BOTTOM, ":: 한글로 되어있다면 한/영 키로 영어로 바꿔주세요.");
-		}
-
-		gTextRender.Refresh(TextLayout::LayoutKind::TITLE);
-		gTextRender.Render(TextLayout::LayoutKind::TITLE);
-		break;
-	case GameState::TITLE_LODING:
-	case GameState::TITLE_INGAME_LODING:
-	case GameState::INGAME_BATTLE_LODING:
-	case GameState::BATTLE_INGAME_LODING:
-		gTextRender.Render();
-		break;
-	case GameState::INGAME:
-		dungeon->Render(player, false);
-
-		// 플레이어 정보
-		gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, string(100, '='));
-		player->Render(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM);
-		
-		// 시스템 로그
-		gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, string(100, '='));
-		gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: W, A, S ,D 로 이동해주세요...");
-		if (gKeyManager.inputResult == KeyManager::InputResult::FAIL)
-		{
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, "");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: [ ERROR ]");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: 입력이 잘못되었습니다.");
-			gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: 한글로 되어있다면 한/영 키로 영어로 바꿔주세요.");
-		}
-
-		gTextRender.Refresh(TextLayout::LayoutKind::INGAME);
-		gTextRender.Render(TextLayout::LayoutKind::INGAME);
-		break;
-	case GameState::INGAME_BATTLE:
-		battleInfo.Render();
-		if (battleInfo.state != BattleInfo::READY)
-		{
-			gKeyManager.Clear();
-			while (gTextRender.IsRemainBufferStr(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::BOTTOM))
-			{
-				// 배틀로그가 아직남음
-				system("cls");
-				gTextRender.Refresh(TextLayout::LayoutKind::BATTLE);
-				gTextRender.Render(TextLayout::LayoutKind::BATTLE);
-
-				cout << gTextRender.MakeString(":: < 계속 > 아무키나 눌러주세요...", 100, TextBuffer::TextAlign::LEFT);
-
-				gKeyManager.Request(KeyManager::InputType::ANYKEYS);
-				gKeyManager.Update();
-			}
-
-			system("cls");
-			gTextRender.Refresh(TextLayout::LayoutKind::BATTLE);
-			gTextRender.RenderMergeMessage(TextLayout::LayoutKind::BATTLE);
-
-			cout << gTextRender.MakeString(":s: < 계속 > 아무키나 눌러주세요...", 100, TextBuffer::TextAlign::LEFT);
-
-			gKeyManager.Request(KeyManager::InputType::ANYKEYS);
-			gKeyManager.Update();
-		}
-		else
-		{
-			gTextRender.Refresh(TextLayout::LayoutKind::BATTLE);
-			gTextRender.Render(TextLayout::LayoutKind::BATTLE);
-		}
-		break;
-	case GameState::INGAME_SHOP:
-		break;
-	}
+	gTextViewManager.Render();
+	//switch (gameState)
+	//{
+	//case GameState::TITLE_INPUT_DIFFI:
+	//case GameState::TITLE_INPUT_NAME:
+	//
+	//	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "                                ------                               ");
+	//	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "                              ----  ----                             ");
+	//	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "");
+	//
+	//	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, difficulty.name[selectDifficulty]);
+	//
+	//	if (gameState == GameState::TITLE_INPUT_DIFFI)
+	//	{
+	//		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "");
+	//		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "CHANGE :: W,S  SELECT :: ENTER");
+	//	}
+	//
+	//	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "");
+	//	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "                              ----  ----                             ");
+	//	gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "                                ------                               ");
+	//
+	//	if (gameState == GameState::TITLE_INPUT_NAME)
+	//	{
+	//		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "");
+	//		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::CONTENT, "영웅의 이름을 입력해주세요");
+	//	}
+	//	else if (gKeyManager.inputResult == KeyManager::InputResult::FAIL)
+	//	{
+	//		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::BOTTOM, "");
+	//		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::BOTTOM, ":: [ ERROR ]");
+	//		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::BOTTOM, ":: 입력이 잘못되었습니다.");
+	//		gTextRender.AppendBuffer(TextLayout::LayoutKind::TITLE, TextLayout::LayoutPos::BOTTOM, ":: 한글로 되어있다면 한/영 키로 영어로 바꿔주세요.");
+	//	}
+	//
+	//	gTextRender.Refresh(TextLayout::LayoutKind::TITLE);
+	//	gTextRender.Render(TextLayout::LayoutKind::TITLE);
+	//	break;
+	//case GameState::TITLE_LODING:
+	//case GameState::TITLE_INGAME_LODING:
+	//case GameState::INGAME_BATTLE_LODING:
+	//case GameState::BATTLE_INGAME_LODING:
+	//	gTextRender.Render();
+	//	break;
+	//case GameState::INGAME:
+	//	dungeon->Render(player, false);
+	//
+	//	// 플레이어 정보
+	//	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, string(100, '='));
+	//	player->Render(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM);
+	//	
+	//	// 시스템 로그
+	//	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, string(100, '='));
+	//	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: W, A, S ,D 로 이동해주세요...");
+	//	if (gKeyManager.inputResult == KeyManager::InputResult::FAIL)
+	//	{
+	//		gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, "");
+	//		gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: [ ERROR ]");
+	//		gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: 입력이 잘못되었습니다.");
+	//		gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::BOTTOM, ":: 한글로 되어있다면 한/영 키로 영어로 바꿔주세요.");
+	//	}
+	//
+	//	gTextRender.Refresh(TextLayout::LayoutKind::INGAME);
+	//	gTextRender.Render(TextLayout::LayoutKind::INGAME);
+	//	break;
+	//case GameState::INGAME_BATTLE:
+	//	battleInfo.Render();
+	//	if (battleInfo.state != BattleInfo::READY)
+	//	{
+	//		gKeyManager.Clear();
+	//		while (gTextRender.IsRemainBufferStr(TextLayout::LayoutKind::BATTLE, TextLayout::LayoutPos::BOTTOM))
+	//		{
+	//			// 배틀로그가 아직남음
+	//			system("cls");
+	//			gTextRender.Refresh(TextLayout::LayoutKind::BATTLE);
+	//			gTextRender.Render(TextLayout::LayoutKind::BATTLE);
+	//
+	//			cout << gTextRender.MakeString(":: < 계속 > 아무키나 눌러주세요...", 100, TextBuffer::TextAlign::LEFT);
+	//
+	//			gKeyManager.Request(KeyManager::InputType::ANYKEYS);
+	//			gKeyManager.Update();
+	//		}
+	//
+	//		system("cls");
+	//		gTextRender.Refresh(TextLayout::LayoutKind::BATTLE);
+	//		gTextRender.RenderMergeMessage(TextLayout::LayoutKind::BATTLE);
+	//
+	//		cout << gTextRender.MakeString(":s: < 계속 > 아무키나 눌러주세요...", 100, TextBuffer::TextAlign::LEFT);
+	//
+	//		gKeyManager.Request(KeyManager::InputType::ANYKEYS);
+	//		gKeyManager.Update();
+	//	}
+	//	else
+	//	{
+	//		gTextRender.Refresh(TextLayout::LayoutKind::BATTLE);
+	//		gTextRender.Render(TextLayout::LayoutKind::BATTLE);
+	//	}
+	//	break;
+	//case GameState::INGAME_SHOP:
+	//	break;
+	//}
 }
 
 bool StepHero::IsEnd()
 {
-	return (gameState == GameState::ENDING);
+	//return (gameState == GameState::ENDING);
+	return false;
 }
 
 void StepHero::Release()
 {
-	if (dungeon) dungeon->Release();
-	delete dungeon;
-	//if (shop) shop->Release();
-	if (player) player->Release();
-	delete player;
+	//if (dungeon) dungeon->Release();
+	//delete dungeon;
+	////if (shop) shop->Release();
+	//if (player) player->Release();
+	//delete player;
 }

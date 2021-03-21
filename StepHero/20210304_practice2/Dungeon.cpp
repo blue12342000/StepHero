@@ -832,42 +832,16 @@ void Dungeon::Update()
 	// 플레이어 플레이어 진행 턴에 따라 몬스터 이동 로직
 }
 
-//void Dungeon::PrintDungeon(Hero* player, bool isDebug)
-//{
-//	SetLightMap(player);
-//
-//	cout << "   " << setfill('=') << setw((cols * 2 + 3)) << "" << endl;
-//	cout.copyfmt(std::ios(NULL));
-//	for (int i = 0; i < rows; i++)		// y축
-//	{
-//		cout << "   : ";
-//		for (int j = 0; j < cols; j++)	// x축
-//		{
-//			if (player->lightMap[i][j] || lightMap[i][j])
-//			{
-//				if (player && i == player->posY && j == player->posX) cout << "O ";
-//				else if ((room[i][j].monster || room[i][j].isMonster) && !isDebug) cout << "M ";
-//				else cout << G_CHAR_FIELD_TYPE[room[i][j].fieldType] << " ";
-//			}
-//			else cout << "  ";
-//		}
-//		cout << ":\t    ";
-//		if (i > 0 && i <= noticeCount) cout << notice[i - 1] << endl;
-//		else cout << endl;
-//	}
-//	cout << "   " << setfill('=') << setw(cols * 2 + 3) << "" << endl;
-//	cout.copyfmt(std::ios(NULL));
-//}
-void Dungeon::Render(Hero* player, bool isDebug)
+void Dungeon::Render(TextRender& view, Hero* player)
 {
 	SetLightMap(player);
 
 	for (int i = 0; i < 10 - (rows / 2); ++i)
 	{
-		gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::CONTENT, "");
+		view.Write(view.TL_CONTENT, "");
 	}
 
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::CONTENT, string(cols * 2 + 3, '=') + string(45 - (cols / 2), ' '));
+	view.Write(view.TL_CONTENT, MakeString(TA_CENTER , view.GetWidth(), string(cols * 2 + 3, '=') + string(45 - (cols / 2), ' ')));
 	for (int i = 0; i < rows; i++)		// y축
 	{
 		string mapRow = string(cols * 2 + 3, ' '), noticeRow(30, ' ');
@@ -877,16 +851,16 @@ void Dungeon::Render(Hero* player, bool isDebug)
 			if (player->lightMap[i][j] || lightMap[i][j])
 			{
 				if (player && i == player->GetPosY() && j == player->GetPosX()) mapRow.replace(j * 2 + 2, 1, "O");
-				else if ((room[i][j].monster || room[i][j].isMonster)) mapRow.replace(j * 2 + 2 , 1, "M");
+				else if ((room[i][j].monster || room[i][j].isMonster)) mapRow.replace(j * 2 + 2, 1, "M");
 				else mapRow.replace(j * 2 + 2, 1, fieldTypeStr[room[i][j].fieldType]);
 			}
 		}
 		mapRow.replace(cols * 2 + 2, 1, ":");
 		if (i > 0 && i <= noticeCount) noticeRow.replace(0, notice[i - 1].length(), notice[i - 1]);
 
-		gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::CONTENT, mapRow + string(15 - (cols / 2), ' ') + noticeRow);
+		view.Write(view.TL_CONTENT, MakeString(TA_CENTER, view.GetWidth(), mapRow + string(15 - (cols / 2), ' ') + noticeRow));
 	}
-	gTextRender.AppendBuffer(TextLayout::LayoutKind::INGAME, TextLayout::LayoutPos::CONTENT, string(cols * 2 + 3, '=') + string(45 - (cols / 2), ' '));
+	view.Write(view.TL_CONTENT, MakeString(TA_CENTER, view.GetWidth(), string(cols * 2 + 3, '=') + string(45 - (cols / 2), ' ')));
 }
 
 void Dungeon::Release()

@@ -1,7 +1,4 @@
 #pragma once
-#include "TextRender.h"
-
-extern TextRender gTextRender;
 
 class ShopItem
 {
