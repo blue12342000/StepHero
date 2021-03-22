@@ -53,7 +53,7 @@ private:
 				buffer.resize(height * 2 + 1, line);
 				break;
 			case TextRender::RenderType::RT_EVERYTIME:
-				buffer.resize(height * 3 + 1, line);
+				buffer.resize(height * 10 + 1, line);
 				break;
 			}
 		};
@@ -140,5 +140,7 @@ public:
 
 	void AddLayout(TextLayout layoutKind, RenderType renderType, int offset, int height);
 	void RemoveLayout(TextLayout layout);
+
+	bool IsBufferEmpty(TextLayout layoutKind);
 };
 

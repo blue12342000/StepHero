@@ -20,7 +20,7 @@ void TextRender::Init(int width, int height)
 void TextRender::Render(bool isRefresh)
 {
 	if (isRefresh) Refresh();
-	for (int i = 0; i <= lastDataLine; ++i)
+	for (int i = 0; i <= lastDataLine && i < height; ++i)
 	{
 		cout << buffer[i] << endl;
 	}
@@ -86,4 +86,9 @@ void TextRender::AddLayout(TextLayout layoutKind, RenderType renderType, int off
 void TextRender::RemoveLayout(TextLayout layoutKind)
 {
 	layout.erase(layoutKind);
+}
+
+bool TextRender::IsBufferEmpty(TextLayout layoutKind)
+{
+	return layout[layoutKind].IsEmpty();
 }

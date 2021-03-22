@@ -6,6 +6,13 @@ extern TextRender gTextRender;
 
 class Monster : public Unit
 {
+private:
+	enum MonsterState
+	{
+		ALIVE,
+		DEAD
+	};
+
 public:
 	int rootExp;
 	int rootGold;

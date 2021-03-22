@@ -7,9 +7,13 @@ public:
 
 	int** fieldSet = nullptr;
 
+private:
+
+public:
 	DungeonTemplate();
-	DungeonTemplate(int rows, int cols):rows(rows), cols(cols) {};
+	DungeonTemplate(int rows, int cols);
 	~DungeonTemplate();
 
+	void Init();
 	void Release();
 };

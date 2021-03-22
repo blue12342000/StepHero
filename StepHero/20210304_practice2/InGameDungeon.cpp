@@ -69,21 +69,17 @@ void InGameDungeon::Update()
 			player->Move(player->GetPosX() + 1, player->GetPosY());
 		}
 	}
-	
-	if (player->GetState() == Hero::HeroState::IDLE && dungeon->IsInMonster(player->GetPosX(), player->GetPosY()))
+
+	if (dungeon->GetRoomFieldType(player->GetPosX(), player->GetPosY()) == Room::FieldType::out)
+	{
+		gKeyManager.Clear();
+		gTextViewManager.ChangeView(gTextViewManager.VT_ESCAPE, gTextViewManager.AT_FADE_OUT_IN, 3000);
+		return;
+	}
+	else if (player->GetState() == Hero::HeroState::IDLE && dungeon->IsInMonster(player->GetPosX(), player->GetPosY()))
 	{
 		player->SetState(Hero::HeroState::BATTLE_BEGIN);
 	
-		// 몬스터와 조우
-		//gameState = GameState::INGAME_BATTLE_LODING;
-		//gKeyManager.Clear();
-		//
-		//// 배틀정보 선입력
-		//Monster* monster = gMonsterTable.GetMonster(dungeon->GetRoomFieldType(player->GetPosX(), player->GetPosY()));
-		//battleInfo = BattleInfo(*player, *monster);
-		//
-		//battleInfo.Render();
-		//gTextRender.ChangeLayout(TextRender::TextChangeAnim::ZIGZAG_OUT_IN, TextLayout::LayoutKind::INGAME, TextLayout::LayoutKind::BATTLE, 1000);
 		gKeyManager.Clear();
 		gTextViewManager.ChangeView(gTextViewManager.VT_BATTLE, gTextViewManager.AT_ZIGZAG_OUT_IN, 1000);
 	}
@@ -99,7 +95,7 @@ void InGameDungeon::Render(vector<string>* targetBuffer)
 	
 	// 플레이어 정보
 	view.Write(view.TL_BOTTOM, string(width, '='));
-	player->Render(view);
+	player->Render(view, view.TL_BOTTOM);
 
 	// 시스템 로그
 	view.Write(view.TL_BOTTOM, string(width, '='));

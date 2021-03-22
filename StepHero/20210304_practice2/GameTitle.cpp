@@ -88,28 +88,28 @@ void GameTitle::Render(vector<string>* targetBuffer)
 	// 뷰에 내용 전달
 	view.Write(view.TL_CONTENT, MakeString(TA_CENTER, width, "------"));
 	view.Write(view.TL_CONTENT, MakeString(TA_CENTER, width, "----  ----"));
-	view.Write(view.TL_CONTENT, "");
+	view.Write(view.TL_CONTENT, " ");
 
 	view.Write(view.TL_CONTENT, MakeString(TA_CENTER, width, difficulty.name[selectDifficulty]));
 
 	if (gameState == GameState::GS_SELECT_DIFFI)
 	{
-		view.Write(view.TL_CONTENT, "");
+		view.Write(view.TL_CONTENT, " ");
 		view.Write(view.TL_CONTENT, MakeString(TA_CENTER, width, "CHANGE :: W,S  SELECT :: ENTER"));
 	}
 
-	view.Write(view.TL_CONTENT, "");
+	view.Write(view.TL_CONTENT, " ");
 	view.Write(view.TL_CONTENT, MakeString(TA_CENTER, width, "----  ----"));
 	view.Write(view.TL_CONTENT, MakeString(TA_CENTER, width, "------"));
 
 	if (gameState == GameState::GS_INPUT_NAME)
 	{
-		view.Write(view.TL_CONTENT, "");
+		view.Write(view.TL_CONTENT, " ");
 		view.Write(view.TL_CONTENT, MakeString(TA_CENTER, width, "영웅의 이름을 입력해주세요"));
 	}
 	else if (gKeyManager.inputResult == KeyManager::InputResult::FAIL)
 	{
-		view.Write(view.TL_CONTENT, "");
+		view.Write(view.TL_CONTENT, " ");
 		view.Write(view.TL_CONTENT, ":: [ ERROR ]");
 		view.Write(view.TL_CONTENT, ":: 입력이 잘못되었습니다.");
 		view.Write(view.TL_CONTENT, ":: 한글로 되어있다면 한/영 키로 영어로 바꿔주세요.");

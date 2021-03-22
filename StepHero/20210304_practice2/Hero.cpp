@@ -6,7 +6,7 @@ Hero::Hero()
 {
 }
 
-Hero::Hero(int lvl, int maxHP, int atk, int gold, int exp, float sight, string name) :Unit(name, lvl, maxHP, atk, exp), sight(sight)
+Hero::Hero(int lvl, int maxHP, int atk, int gold, int exp, float sight, string name) :Unit(name, lvl, maxHP, atk, exp), gold(gold), sight(sight)
 {
 }
 
@@ -127,14 +127,14 @@ void Hero::Move(int x, int y)
 	posY = y;
 }
 
-void Hero::Render(TextRender& view)
+void Hero::Render(TextRender& view, TextRender::TextLayout layout)
 {
-	view.Write(view.TL_BOTTOM, string("     " + MakeString(TA_CENTER, 23, "[[ " + name + " ]]")));
-	view.Write(view.TL_BOTTOM, string("     레  벨 :" + MakeString(TA_RIGHT, 15, to_string(lvl))));
-	view.Write(view.TL_BOTTOM, string("     공격력 :" + MakeString(TA_RIGHT, 15, to_string(atk))));
-	view.Write(view.TL_BOTTOM, string("     체  력 :" + MakeString(TA_RIGHT, 15, string(to_string(hp) + " / " + to_string(maxHP)))));
-	view.Write(view.TL_BOTTOM, string("     경험치 :" + MakeString(TA_RIGHT, 15, to_string(exp))));
-	view.Write(view.TL_BOTTOM, string("     소지금 :" + MakeString(TA_RIGHT, 15, to_string(gold))));
+	view.Write(layout, string("     " + MakeString(TA_CENTER, 23, "[[ " + name + " ]]")));
+	view.Write(layout, string("     레  벨 :" + MakeString(TA_RIGHT, 15, to_string(lvl))));
+	view.Write(layout, string("     공격력 :" + MakeString(TA_RIGHT, 15, to_string(atk))));
+	view.Write(layout, string("     체  력 :" + MakeString(TA_RIGHT, 15, string(to_string(hp) + " / " + to_string(maxHP)))));
+	view.Write(layout, string("     경험치 :" + MakeString(TA_RIGHT, 15, to_string(exp))));
+	view.Write(layout, string("     소지금 :" + MakeString(TA_RIGHT, 15, to_string(gold))));
 }
 
 void Hero::Release()

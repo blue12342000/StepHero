@@ -28,18 +28,18 @@
     <Filter Include="소스 파일\유닛\기본">
       <UniqueIdentifier>{877f0c38-b91c-4b03-b876-b445bbd8407a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\오브젝트">
+      <UniqueIdentifier>{0f1222d5-632f-4ae7-a38b-7da66dd3cf82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\오브젝트\기본">
+      <UniqueIdentifier>{0001b24f-8769-4eb5-8bac-f449b75bdab8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="20210304_practice2.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Dungeon.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Shop.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="KeyManager.cpp">
@@ -81,15 +81,27 @@
     <ClCompile Include="Hero.cpp">
       <Filter>소스 파일\유닛</Filter>
     </ClCompile>
+    <ClCompile Include="Shop.cpp">
+      <Filter>소스 파일\오브젝트</Filter>
+    </ClCompile>
+    <ClCompile Include="Dungeon.cpp">
+      <Filter>소스 파일\오브젝트</Filter>
+    </ClCompile>
+    <ClCompile Include="GameOver.cpp">
+      <Filter>소스 파일\게임화면</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEnding.cpp">
+      <Filter>소스 파일\게임화면</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneralShop.cpp">
+      <Filter>소스 파일\게임화면</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEscape.cpp">
+      <Filter>소스 파일\게임화면</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Dungeon.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Shop.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="FileManager.h">
@@ -136,6 +148,24 @@
     </ClInclude>
     <ClInclude Include="Unit.h">
       <Filter>소스 파일\유닛\기본</Filter>
+    </ClInclude>
+    <ClInclude Include="Shop.h">
+      <Filter>소스 파일\오브젝트</Filter>
+    </ClInclude>
+    <ClInclude Include="Dungeon.h">
+      <Filter>소스 파일\오브젝트</Filter>
+    </ClInclude>
+    <ClInclude Include="GameOver.h">
+      <Filter>소스 파일\게임화면</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEnding.h">
+      <Filter>소스 파일\게임화면</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneralShop.h">
+      <Filter>소스 파일\게임화면</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEscape.h">
+      <Filter>소스 파일\게임화면</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

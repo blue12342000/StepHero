@@ -11,6 +11,7 @@ public:
 		VT_BATTLE,
 		VT_SHOP,
 		VT_ENDING,
+		VT_ESCAPE,
 		VT_GAMEOVER,
 		VT_NONE
 	};

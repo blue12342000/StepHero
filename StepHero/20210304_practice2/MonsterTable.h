@@ -4,9 +4,10 @@
 
 class MonsterTable
 {
-public:
+private:
 	Monster monster[Room::FieldType::wall][4];
-	
+
+public:
 	MonsterTable();
 	~MonsterTable();
 

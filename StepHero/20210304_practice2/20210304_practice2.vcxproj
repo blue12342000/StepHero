@@ -151,7 +151,11 @@
     <ClCompile Include="Dungeon.cpp" />
     <ClCompile Include="DungeonTemplate.cpp" />
     <ClCompile Include="FileManager.cpp" />
+    <ClCompile Include="GameEnding.cpp" />
+    <ClCompile Include="GameEscape.cpp" />
+    <ClCompile Include="GameOver.cpp" />
     <ClCompile Include="GameTitle.cpp" />
+    <ClCompile Include="GeneralShop.cpp" />
     <ClCompile Include="Hero.cpp" />
     <ClCompile Include="InGameBattle.cpp" />
     <ClCompile Include="InGameDungeon.cpp" />
@@ -173,7 +177,11 @@
   <ItemGroup>
     <ClInclude Include="Dungeon.h" />
     <ClInclude Include="DungeonTemplate.h" />
+    <ClInclude Include="GameEnding.h" />
+    <ClInclude Include="GameEscape.h" />
+    <ClInclude Include="GameOver.h" />
     <ClInclude Include="GameTitle.h" />
+    <ClInclude Include="GeneralShop.h" />
     <ClInclude Include="Hero.h" />
     <ClInclude Include="InGameBattle.h" />
     <ClInclude Include="InGameDungeon.h" />

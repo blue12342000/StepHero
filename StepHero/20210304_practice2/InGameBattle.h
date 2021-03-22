@@ -18,11 +18,19 @@ private:
 	{
 		BS_INIT,
 		BS_READY,
-		BS_BATTLE,
+		BS_BATTLE_START,
+		BS_BATTLE_END,
 		BS_BATTLE_RESULT,
-		BS_WIN,
-		BS_LOSE,
+		BS_CYCLE_END,
+		BS_CHOOSE_SHOP,
 		BS_NONE
+	};
+
+	enum BattleResult
+	{
+		BR_PLAYER_WIN,
+		BR_ENEMY_WIN,
+		BR_NONE
 	};
 
 	struct BattleLog
@@ -32,6 +40,9 @@ private:
 	};
 
 	BattleState state = BattleState::BS_NONE;
+	BattleResult result = BattleResult::BR_NONE;
+
+	bool selectShopEnterYN = true;
 
 	Hero* player = nullptr;
 	Monster* monster = nullptr;
@@ -40,6 +51,8 @@ private:
 
 private:
 	InGameBattle();
+
+	void RenderBattleStatus();
 
 public:
 	InGameBattle(int width, int height);

@@ -25,5 +25,6 @@ public:
 	string GetName() { return name; }
 
 	virtual bool HitDamage(int damage) { return false; }
+	virtual bool IsAlive() { return hp > 0; }
 };
 

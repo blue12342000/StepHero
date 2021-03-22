@@ -63,7 +63,7 @@ public:
 
 	void Move(int x, int y);
 
-	void Render(TextRender& view);
+	void Render(TextRender& view, TextRender::TextLayout layout);
 	void Release();
 };
 

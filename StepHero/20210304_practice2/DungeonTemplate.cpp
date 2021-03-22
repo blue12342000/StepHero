@@ -1,14 +1,21 @@
 #include "stdafx.h"
 #include "DungeonTemplate.h"
 
-
 DungeonTemplate::DungeonTemplate()
 {
 }
 
+DungeonTemplate::DungeonTemplate(int rows, int cols) :rows(rows), cols(cols)
+{
+}
 
 DungeonTemplate::~DungeonTemplate()
 {
+}
+
+void DungeonTemplate::Init()
+{
+
 }
 
 void DungeonTemplate::Release()
