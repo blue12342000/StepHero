@@ -130,12 +130,13 @@ public:
 
 	void Init(int width, int height);
 	//void Update();
-	void Render(bool isRefresh = true);
+	void Render();
 	void Release();
 
 	void Refresh();
 
 	void Write(TextLayout layoutKind, const string& str);
+	void Write(int offsetX, int offsetY, const string& str);
 	void CopyTo(vector<string>& targetBuffer);
 
 	void AddLayout(TextLayout layoutKind, RenderType renderType, int offset, int height);

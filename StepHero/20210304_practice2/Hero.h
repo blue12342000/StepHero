@@ -66,4 +66,3 @@ public:
 	void Render(TextRender& view, TextRender::TextLayout layout);
 	void Release();
 };
-

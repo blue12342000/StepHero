@@ -11,12 +11,12 @@ extern char G_CHAR_FIELD_TYPE[6];
 class Room
 {
 public:
-	enum FieldType { empty = 0, wood, swamp, wall, fire, out, eof };
+	enum FieldType { FT_EMPTY = 0, FT_WOOD, FT_SWAMP, FT_WALL, FT_FIRE, FT_EXIT, FT_END };
 
 	int locX;
 	int locY;
 
-	FieldType fieldType = FieldType::eof;
+	FieldType fieldType = FieldType::FT_END;
 	//char data;
 
 	bool isMonster = false;

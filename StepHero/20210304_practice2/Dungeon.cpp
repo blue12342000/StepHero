@@ -3,12 +3,12 @@
 
 Dungeon::Dungeon()
 {
-	fieldTypeStr.insert(make_pair(Room::FieldType::empty, "."));
-	fieldTypeStr.insert(make_pair(Room::FieldType::wood, "T"));
-	fieldTypeStr.insert(make_pair(Room::FieldType::swamp, "~"));
-	fieldTypeStr.insert(make_pair(Room::FieldType::wall, "#"));
-	fieldTypeStr.insert(make_pair(Room::FieldType::fire, "A"));
-	fieldTypeStr.insert(make_pair(Room::FieldType::out, "E"));
+	fieldTypeStr.insert(make_pair(Room::FieldType::FT_EMPTY, "."));
+	fieldTypeStr.insert(make_pair(Room::FieldType::FT_WOOD, "T"));
+	fieldTypeStr.insert(make_pair(Room::FieldType::FT_SWAMP, "~"));
+	fieldTypeStr.insert(make_pair(Room::FieldType::FT_WALL, "#"));
+	fieldTypeStr.insert(make_pair(Room::FieldType::FT_FIRE, "A"));
+	fieldTypeStr.insert(make_pair(Room::FieldType::FT_EXIT, "E"));
 
 	notice[0] = "* 던전에서 탈출에 성공하세요 *";
 	notice[1] = "";
@@ -150,17 +150,17 @@ void Dungeon::CreateDungeon(int _size)
 			if (region[i / 5][j / 5]->isUsed) continue;
 			int templateNo = region[i / 5][j / 5]->templateNo;
 
-			if (region[i / 5][j / 5]->isFlip)
+			if (!region[i / 5][j / 5]->isFlip)
 			{
 				for (int ty = i - (i / 5) * 5; ty < gDungeonTemplate[templateNo].rows; ++ty)
 				{
 					for (int tx = j - (j / 5) * 5; tx < gDungeonTemplate[templateNo].cols; ++tx)
 					{
-						if (room[i + ty][j + tx].fieldType != Room::FieldType::out)
+						if (room[i + ty][j + tx].fieldType != Room::FieldType::FT_EXIT)
 						{
 							room[i + ty][j + tx].fieldType = (Room::FieldType)gDungeonTemplate[templateNo].fieldSet[ty][gDungeonTemplate[templateNo].cols - 1 - tx];
 						}
-						if (room[i + ty][j + tx].fieldType == Room::FieldType::fire)
+						if (room[i + ty][j + tx].fieldType == Room::FieldType::FT_FIRE)
 						{
 							lightList.PushBack(j + tx, i + ty, 2.5f);
 						}
@@ -169,16 +169,17 @@ void Dungeon::CreateDungeon(int _size)
 			}
 			else
 			{
+				// 좌우 반전
 				for (int ty = i - (i / 5) * 5; ty < gDungeonTemplate[templateNo].rows; ++ty)
 				{
 					for (int tx = j - (j / 5) * 5; tx < gDungeonTemplate[templateNo].cols; ++tx)
 					{
-						if (room[i + ty][j + tx].fieldType != Room::FieldType::out)
+						if (room[i + ty][j + tx].fieldType != Room::FieldType::FT_EXIT)
 						{
 							room[i + ty][j + tx].fieldType = (Room::FieldType)gDungeonTemplate[templateNo].fieldSet[ty][tx];
 						}
 
-						if (room[i + ty][j + tx].fieldType == Room::FieldType::fire)
+						if (room[i + ty][j + tx].fieldType == Room::FieldType::FT_FIRE)
 						{
 							lightList.PushBack(j + tx, i + ty, 2.5f);
 						}
@@ -194,7 +195,7 @@ void Dungeon::CreateDungeon(int _size)
 	{
 		for (int x = 0; x < cols; ++x)
 		{
-			if (room[y][x].fieldType == Room::FieldType::eof) room[y][x].fieldType = Room::FieldType::empty;
+			if (room[y][x].fieldType == Room::FieldType::FT_END) room[y][x].fieldType = Room::FieldType::FT_EMPTY;
 			room[y][x].monster = nullptr;
 		}
 	}
@@ -264,13 +265,13 @@ void Dungeon::SetExit(int _exitPosX, int _exitPosY)
 {
 	exitPosX = _exitPosX;
 	exitPosY = _exitPosY;
-	room[exitPosY][exitPosX].fieldType = Room::FieldType::out;
+	room[exitPosY][exitPosX].fieldType = Room::FieldType::FT_EXIT;
 }
 
 bool Dungeon::IsPossibleMove(int x, int y)
 {
 	if (x < 0 || y < 0 || x >= cols || y >= rows) return false;
-	return room[y][x].fieldType != Room::FieldType::wall && room[y][x].fieldType != Room::FieldType::fire;
+	return room[y][x].fieldType != Room::FieldType::FT_WALL && room[y][x].fieldType != Room::FieldType::FT_FIRE;
 }
 
 bool Dungeon::IsInMonster(int x, int y)
@@ -303,7 +304,7 @@ void Dungeon::SetLightMap(Hero* player)
 	// 상
 	for (int dy = pY - 1; dy >= 0 && dy >= pY - pSight; --dy)
 	{
-		if (room[dy][pX].fieldType != Room::FieldType::wall && room[dy][pX].fieldType != Room::FieldType::fire) player->lightMap[dy][pX] = 2;
+		if (room[dy][pX].fieldType != Room::FieldType::FT_WALL && room[dy][pX].fieldType != Room::FieldType::FT_FIRE) player->lightMap[dy][pX] = 2;
 		else
 		{
 			player->lightMap[dy][pX] = 1;
@@ -313,7 +314,7 @@ void Dungeon::SetLightMap(Hero* player)
 	// 하
 	for (int dy = pY + 1; dy < rows && dy <= pY + pSight; ++dy)
 	{
-		if (room[dy][pX].fieldType != Room::FieldType::wall && room[dy][pX].fieldType != Room::FieldType::fire) player->lightMap[dy][pX] = 2;
+		if (room[dy][pX].fieldType != Room::FieldType::FT_WALL && room[dy][pX].fieldType != Room::FieldType::FT_FIRE) player->lightMap[dy][pX] = 2;
 		else
 		{
 			player->lightMap[dy][pX] = 1;
@@ -323,7 +324,7 @@ void Dungeon::SetLightMap(Hero* player)
 	// 좌
 	for (int dx = pX - 1; dx >= 0 && dx >= pX - pSight; --dx)
 	{
-		if (room[pY][dx].fieldType != Room::FieldType::wall && room[pY][dx].fieldType != Room::FieldType::fire) player->lightMap[pY][dx] = 2;
+		if (room[pY][dx].fieldType != Room::FieldType::FT_WALL && room[pY][dx].fieldType != Room::FieldType::FT_FIRE) player->lightMap[pY][dx] = 2;
 		else
 		{
 			player->lightMap[pY][dx] = 1;
@@ -333,7 +334,7 @@ void Dungeon::SetLightMap(Hero* player)
 	// 우
 	for (int dx = pX + 1; dx < cols && dx <= pX + pSight; ++dx)
 	{
-		if (room[pY][dx].fieldType != Room::FieldType::wall && room[pY][dx].fieldType != Room::FieldType::fire) player->lightMap[pY][dx] = 2;
+		if (room[pY][dx].fieldType != Room::FieldType::FT_WALL && room[pY][dx].fieldType != Room::FieldType::FT_FIRE) player->lightMap[pY][dx] = 2;
 		else
 		{
 			player->lightMap[pY][dx] = 1;
@@ -357,7 +358,7 @@ void Dungeon::SetLightMap(Hero* player)
 		bool isLightOnX = player->lightMap[targetY][targetX - 1] == 2;
 		bool isLightOnY = player->lightMap[targetY + 1][targetX] == 2;
 		bool isLightOnXY = player->lightMap[targetY + 1][targetX - 1] == 2;
-		bool isNotObstacle = room[targetY][targetX].fieldType != Room::FieldType::wall && room[targetY][targetX].fieldType != Room::FieldType::fire;
+		bool isNotObstacle = room[targetY][targetX].fieldType != Room::FieldType::FT_WALL && room[targetY][targetX].fieldType != Room::FieldType::FT_FIRE;
 
 		player->lightMap[targetY][targetX] = ((isLightOnX && isLightOnY) || ((isLightOnX ^ isLightOnY) && isLightOnXY)) ? 2 : 0;
 		if (!isNotObstacle && player->lightMap[targetY][targetX] == 2) player->lightMap[targetY][targetX] = 1;
@@ -399,7 +400,7 @@ void Dungeon::SetLightMap(Hero* player)
 		bool isLightOnX = player->lightMap[targetY][targetX + 1] == 2;
 		bool isLightOnY = player->lightMap[targetY + 1][targetX] == 2;
 		bool isLightOnXY = player->lightMap[targetY + 1][targetX + 1] == 2;
-		bool isNotObstacle = room[targetY][targetX].fieldType != Room::FieldType::wall && room[targetY][targetX].fieldType != Room::FieldType::fire;
+		bool isNotObstacle = room[targetY][targetX].fieldType != Room::FieldType::FT_WALL && room[targetY][targetX].fieldType != Room::FieldType::FT_FIRE;
 
 		player->lightMap[targetY][targetX] = ((isLightOnX && isLightOnY) || ((isLightOnX ^ isLightOnY) && isLightOnXY)) ? 2 : 0;
 		if (!isNotObstacle && player->lightMap[targetY][targetX] == 2) player->lightMap[targetY][targetX] = 1;
@@ -441,7 +442,7 @@ void Dungeon::SetLightMap(Hero* player)
 		bool isLightOnX = player->lightMap[targetY][targetX + 1] == 2;
 		bool isLightOnY = player->lightMap[targetY - 1][targetX] == 2;
 		bool isLightOnXY = player->lightMap[targetY - 1][targetX + 1] == 2;
-		bool isNotObstacle = room[targetY][targetX].fieldType != Room::FieldType::wall && room[targetY][targetX].fieldType != Room::FieldType::fire;
+		bool isNotObstacle = room[targetY][targetX].fieldType != Room::FieldType::FT_WALL && room[targetY][targetX].fieldType != Room::FieldType::FT_FIRE;
 
 		player->lightMap[targetY][targetX] = ((isLightOnX && isLightOnY) || ((isLightOnX ^ isLightOnY) && isLightOnXY)) ? 2 : 0;
 		if (!isNotObstacle && player->lightMap[targetY][targetX] == 2) player->lightMap[targetY][targetX] = 1;
@@ -483,7 +484,7 @@ void Dungeon::SetLightMap(Hero* player)
 		bool isLightOnX = player->lightMap[targetY][targetX - 1] == 2;
 		bool isLightOnY = player->lightMap[targetY - 1][targetX] == 2;
 		bool isLightOnXY = player->lightMap[targetY - 1][targetX - 1] == 2;
-		bool isNotObstacle = room[targetY][targetX].fieldType != Room::FieldType::wall && room[targetY][targetX].fieldType != Room::FieldType::fire;
+		bool isNotObstacle = room[targetY][targetX].fieldType != Room::FieldType::FT_WALL && room[targetY][targetX].fieldType != Room::FieldType::FT_FIRE;
 
 		player->lightMap[targetY][targetX] = ((isLightOnX && isLightOnY) || ((isLightOnX ^ isLightOnY) && isLightOnXY)) ? 2 : 0;
 		if (!isNotObstacle && player->lightMap[targetY][targetX] == 2) player->lightMap[targetY][targetX] = 1;
@@ -559,7 +560,7 @@ void Dungeon::SetLightMap(int x, int y, float lightBright)
 
 
 		if (tempLightMap[localY][localX] == -1) break;
-		if (room[worldY][pX].fieldType != Room::FieldType::wall && room[worldY][pX].fieldType != Room::FieldType::fire) tempLightMap[localY][localX] = 2;
+		if (room[worldY][pX].fieldType != Room::FieldType::FT_WALL && room[worldY][pX].fieldType != Room::FieldType::FT_FIRE) tempLightMap[localY][localX] = 2;
 		else
 		{
 			tempLightMap[localY][localX] = 1;
@@ -574,7 +575,7 @@ void Dungeon::SetLightMap(int x, int y, float lightBright)
 		int worldY = pY + localY - centerY;
 
 		if (tempLightMap[localY][localX] == -1) break;
-		if (room[worldY][pX].fieldType != Room::FieldType::wall && room[worldY][pX].fieldType != Room::FieldType::fire) tempLightMap[localY][localX] = 2;
+		if (room[worldY][pX].fieldType != Room::FieldType::FT_WALL && room[worldY][pX].fieldType != Room::FieldType::FT_FIRE) tempLightMap[localY][localX] = 2;
 		else
 		{
 			tempLightMap[localY][localX] = 1;
@@ -589,7 +590,7 @@ void Dungeon::SetLightMap(int x, int y, float lightBright)
 		int worldX = pX + localX - centerX;
 
 		if (tempLightMap[localY][localX] == -1) break;
-		if (room[pY][worldX].fieldType != Room::FieldType::wall && room[pY][worldX].fieldType != Room::FieldType::fire) tempLightMap[localY][localX] = 2;
+		if (room[pY][worldX].fieldType != Room::FieldType::FT_WALL && room[pY][worldX].fieldType != Room::FieldType::FT_FIRE) tempLightMap[localY][localX] = 2;
 		else
 		{
 			tempLightMap[localY][localX] = 1;
@@ -604,7 +605,7 @@ void Dungeon::SetLightMap(int x, int y, float lightBright)
 		int worldX = pX + localX - centerX;
 
 		if (tempLightMap[localY][localX] == -1) break;
-		if (room[pY][worldX].fieldType != Room::FieldType::wall && room[pY][worldX].fieldType != Room::FieldType::fire) tempLightMap[localY][localX] = 2;
+		if (room[pY][worldX].fieldType != Room::FieldType::FT_WALL && room[pY][worldX].fieldType != Room::FieldType::FT_FIRE) tempLightMap[localY][localX] = 2;
 		else
 		{
 			tempLightMap[localY][localX] = 1;
@@ -632,7 +633,7 @@ void Dungeon::SetLightMap(int x, int y, float lightBright)
 			bool isLightOnX = tempLightMap[targetY][targetX - 1] == 2;
 			bool isLightOnY = tempLightMap[targetY + 1][targetX] == 2;
 			bool isLightOnXY = tempLightMap[targetY + 1][targetX - 1] == 2;
-			bool isNotObstacle = room[worldY][worldX].fieldType != Room::FieldType::wall && room[worldY][worldX].fieldType != Room::FieldType::fire;
+			bool isNotObstacle = room[worldY][worldX].fieldType != Room::FieldType::FT_WALL && room[worldY][worldX].fieldType != Room::FieldType::FT_FIRE;
 
 			tempLightMap[targetY][targetX] = ((isLightOnX && isLightOnY) || ((isLightOnX ^ isLightOnY) && isLightOnXY)) ? 2 : 0;
 			if (!isNotObstacle && tempLightMap[targetY][targetX] == 2) tempLightMap[targetY][targetX] = 1;
@@ -679,7 +680,7 @@ void Dungeon::SetLightMap(int x, int y, float lightBright)
 			bool isLightOnX = tempLightMap[targetY][targetX + 1] == 2;
 			bool isLightOnY = tempLightMap[targetY + 1][targetX] == 2;
 			bool isLightOnXY = tempLightMap[targetY + 1][targetX + 1] == 2;
-			bool isNotObstacle = room[worldY][worldX].fieldType != Room::FieldType::wall && room[worldY][worldX].fieldType != Room::FieldType::fire;
+			bool isNotObstacle = room[worldY][worldX].fieldType != Room::FieldType::FT_WALL && room[worldY][worldX].fieldType != Room::FieldType::FT_FIRE;
 
 			tempLightMap[targetY][targetX] = ((isLightOnX && isLightOnY) || ((isLightOnX ^ isLightOnY) && isLightOnXY)) ? 2 : 0;
 			if (!isNotObstacle && tempLightMap[targetY][targetX] == 2) tempLightMap[targetY][targetX] = 1;
@@ -725,7 +726,7 @@ void Dungeon::SetLightMap(int x, int y, float lightBright)
 			bool isLightOnX = tempLightMap[targetY][targetX + 1] == 2;
 			bool isLightOnY = tempLightMap[targetY - 1][targetX] == 2;
 			bool isLightOnXY = tempLightMap[targetY - 1][targetX + 1] == 2;
-			bool isNotObstacle = room[worldY][worldX].fieldType != Room::FieldType::wall && room[worldY][worldX].fieldType != Room::FieldType::fire;
+			bool isNotObstacle = room[worldY][worldX].fieldType != Room::FieldType::FT_WALL && room[worldY][worldX].fieldType != Room::FieldType::FT_FIRE;
 
 			tempLightMap[targetY][targetX] = ((isLightOnX && isLightOnY) || ((isLightOnX ^ isLightOnY) && isLightOnXY)) ? 2 : 0;
 			if (!isNotObstacle && tempLightMap[targetY][targetX] == 2) tempLightMap[targetY][targetX] = 1;
@@ -773,7 +774,7 @@ void Dungeon::SetLightMap(int x, int y, float lightBright)
 			bool isLightOnX = tempLightMap[targetY][targetX - 1] == 2;
 			bool isLightOnY = tempLightMap[targetY - 1][targetX] == 2;
 			bool isLightOnXY = tempLightMap[targetY - 1][targetX - 1] == 2;
-			bool isNotObstacle = room[worldY][worldX].fieldType != Room::FieldType::wall && room[worldY][worldX].fieldType != Room::FieldType::fire;
+			bool isNotObstacle = room[worldY][worldX].fieldType != Room::FieldType::FT_WALL && room[worldY][worldX].fieldType != Room::FieldType::FT_FIRE;
 
 			tempLightMap[targetY][targetX] = ((isLightOnX && isLightOnY) || ((isLightOnX ^ isLightOnY) && isLightOnXY)) ? 2 : 0;
 			if (!isNotObstacle && tempLightMap[targetY][targetX] == 2) tempLightMap[targetY][targetX] = 1;

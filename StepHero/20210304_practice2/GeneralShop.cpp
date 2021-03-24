@@ -221,6 +221,7 @@ void GeneralShop::Render(vector<string>* targetBuffer)
 	//			if (!isUseShop) break;
 
 	// 뷰에있는걸 출력
+	view.Refresh();
 	if (targetBuffer) view.CopyTo(*targetBuffer);
 	else view.Render();
 }

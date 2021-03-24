@@ -21,11 +21,11 @@ void InGameBattle::RenderBattleStatus()
 	statusLines[3] = MakeString(TA_LEFT, 6, "체  력") + MakeString(TA_RIGHT, 21, string(to_string(player->GetHp()) + " / " + to_string(player->GetMaxHP())));
 	statusLines[4] = "["+ MakeString(TA_LEFT, 25, string((int)(ceil(25.0f * player->GetHp() / player->GetMaxHP()) + 0.1f), 'D')) + "]";
 
-	statusLines[5] = MakeString(TA_CENTER, 27, "++" + monster->GetName() + "++");
-	statusLines[6] = MakeString(TA_LEFT, 6, "레  벨") + MakeString(TA_RIGHT, 21, to_string(monster->GetLvl()) + " LV");
-	statusLines[7] = MakeString(TA_LEFT, 6, "공격력") + MakeString(TA_RIGHT, 21, to_string(monster->GetAtk()));
-	statusLines[8] = MakeString(TA_LEFT, 6, "체  력") + MakeString(TA_RIGHT, 21, string(to_string(monster->GetHp()) + " / " + to_string(monster->GetMaxHP())));
-	statusLines[9] = "[" + MakeString(TA_RIGHT, 25, string((int)(ceil(25.0f * monster->GetHp() / monster->GetMaxHP()) + 0.1f), 'D')) + "]";
+	statusLines[5] = MakeString(TA_CENTER, 27, "++" + monster.GetName() + "++");
+	statusLines[6] = MakeString(TA_LEFT, 6, "레  벨") + MakeString(TA_RIGHT, 21, to_string(monster.GetLvl()) + " LV");
+	statusLines[7] = MakeString(TA_LEFT, 6, "공격력") + MakeString(TA_RIGHT, 21, to_string(monster.GetAtk()));
+	statusLines[8] = MakeString(TA_LEFT, 6, "체  력") + MakeString(TA_RIGHT, 21, string(to_string(monster.GetHp()) + " / " + to_string(monster.GetMaxHP())));
+	statusLines[9] = "[" + MakeString(TA_RIGHT, 25, string((int)(ceil(25.0f * monster.GetHp() / monster.GetMaxHP()) + 0.1f), 'D')) + "]";
 
 	view.Write(view.TL_CONTENT, MakeString(TA_CENTER, width, "---------------------------------------------------------------------"));
 	view.Write(view.TL_CONTENT, MakeString(TA_CENTER, width,                  "                                     "));
@@ -89,6 +89,8 @@ void InGameBattle::Update()
 	}
 	else if (state == BattleState::BS_BATTLE_START)
 	{
+		result = BattleResult::BR_NONE;
+
 		// 배틀
 		int playerInput = rand() % 3;
 		int monsterInput = rand() % 3;
@@ -104,12 +106,12 @@ void InGameBattle::Update()
 		{
 			// 승리
 			result = BattleResult::BR_PLAYER_WIN;
-			monster->HitDamage(player->GetAtk());
+			monster.HitDamage(player->GetAtk());
 		}
 		else
 		{
 			result = BattleResult::BR_ENEMY_WIN;
-			player->HitDamage(monster->GetAtk());
+			player->HitDamage(monster.GetAtk());
 		}
 		//battleLog.resize(30, {1,  1});
 		battleLog.push_back({ playerInput, monsterInput });
@@ -131,7 +133,7 @@ void InGameBattle::Update()
 		if (result == BattleResult::BR_PLAYER_WIN)
 		{
 			// 몬스터가 죽었는지 확인
-			if (monster->IsAlive())
+			if (monster.IsAlive())
 			{
 				state = BattleState::BS_BATTLE_START;
 				gKeyManager.Request(KeyManager::InputType::ANYKEYS);
@@ -189,7 +191,7 @@ void InGameBattle::Render(vector<string>* targetBuffer)
 	if (state == BattleState::BS_INIT || state == BattleState::BS_READY)
 	{
 		RenderBattleStatus();
-		view.Write(view.TL_BOTTOM, MakeString(TA_CENTER, width, "*** " + monster->GetName() + "와 조우하였습니다. ***"));
+		view.Write(view.TL_BOTTOM, MakeString(TA_CENTER, width, "*** " + monster.GetName() + "와 조우하였습니다. ***"));
 		view.Write(view.TL_BOTTOM, " ");
 		view.Write(view.TL_BOTTOM, ":: < 계속 > 아무키나 눌러주세요...");
 	}
@@ -205,7 +207,7 @@ void InGameBattle::Render(vector<string>* targetBuffer)
 		for (auto it = battleLog.begin(); it != battleLog.end();)
 		{
 			view.Write(view.TL_BOTTOM, " ");
-			string logStr = MakeString(TA_RIGHT, 30, player->GetName() + " [[ " + battleItemName[it->useItemA] + " ]]") + " VS " + MakeString(TA_LEFT, 30, monster->GetName() + " [[ " + battleItemName[it->useItemB] + " ]]");
+			string logStr = MakeString(TA_RIGHT, 30, player->GetName() + " [[ " + battleItemName[it->useItemA] + " ]]") + " VS " + MakeString(TA_LEFT, 30, monster.GetName() + " [[ " + battleItemName[it->useItemB] + " ]]");
 			view.Write(view.TL_BOTTOM, MakeString(TA_CENTER, width, logStr));
 			if (it->useItemA == it->useItemB)
 			{
@@ -230,9 +232,26 @@ void InGameBattle::Render(vector<string>* targetBuffer)
 	{
 		RenderBattleStatus();
 		// 팝업창으로 결과를 띄워줌
-		// if (result ==)
-		view.Write(view.TL_BOTTOM, " 결과 팝업 ");
-		view.Write(view.TL_BOTTOM, ":: < 계속 > 아무키나 눌러주세요...");
+		if (result == BattleResult::BR_PLAYER_WIN)
+		{
+			// 플레이어 승리 팝업
+			popup.Write("");
+			popup.Write("= 승 리 =");
+			popup.Write("");
+			popup.Write("승리 하였습니다");
+			popup.Write("");
+			popup.Write("적에게 " + to_string(player->GetAtk()) + "피해를 주었습니다");
+		}
+		else if (result == BattleResult::BR_ENEMY_WIN)
+		{
+			// 플레이어 패배 팝업
+			popup.Write("");
+			popup.Write("= 패 배 =");
+			popup.Write("");
+			popup.Write("패배 하였습니다");
+			popup.Write("");
+			popup.Write(to_string(monster.GetAtk()) + "피해를 받았습니다");
+		}
 	}
 	else if (state == BattleState::BS_CHOOSE_SHOP)
 	{
@@ -259,11 +278,17 @@ void InGameBattle::Render(vector<string>* targetBuffer)
 		}
 	}
 
+	view.Refresh();
+	if (state == BattleState::BS_CYCLE_END && (result == BattleResult::BR_PLAYER_WIN || result == BattleResult::BR_ENEMY_WIN))
+	{
+		popup.Show(view, view.GetWidth() / 2 - 20, view.GetHeight() / 2 - 7, 40, 10);
+	}
 	// 뷰에있는걸 출력
 	if (targetBuffer) view.CopyTo(*targetBuffer);
 	else view.Render();
 
-	if (state == BattleState::BS_BATTLE_RESULT)
+	if (state == BattleState::BS_BATTLE_RESULT
+		|| (state == BattleState::BS_CYCLE_END && (result == BattleResult::BR_PLAYER_WIN || result == BattleResult::BR_ENEMY_WIN)))
 	{
 		// 이곳은 예외적으로 cout 사용?
 		// 버퍼공간을 사용안하면서 해야해서 현재 구조상 불가피함

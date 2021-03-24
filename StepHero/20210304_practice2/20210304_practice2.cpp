@@ -46,11 +46,11 @@ struct QuestNode
 
 	void* owner = nullptr;
 
-	FunctionPtr QuestClear = nullptr;
-	FunctionPtr QuestFailed = nullptr;
+	vector<FunctionPtr> questClearFnList;
+	vector<FunctionPtr> questFailedFnList;
 
-	QuestNode() {}
-	QuestNode(int id, string name, string desc, FunctionPtr fnQuestClear, FunctionPtr fnQuestFailed):id(id),name(name),desc(desc), QuestClear(fnQuestClear), QuestFailed(fnQuestFailed) { }
+	QuestNode() { questClearFnList.push_back([]() {}); }
+	QuestNode(int id, string name, string desc):id(id),name(name),desc(desc) { }
 
 	// 선택퀘스트 - 본인과 같은 뎁스
 	QuestNode* firendQuset = nullptr;
@@ -86,7 +86,7 @@ struct EquipShop
 	1. 배틀 패배 승리 구현 ㅇ
 	2. 배틀 이후 상점 구현 ㅇ
 	3. 탈출구로 탈출시 엔딩으로 ㅇ
-	4. TextRender에서 팝업, ALERT창을 나오게 할수있게 구현해놔야함
+	4. TextRender에서 팝업, ALERT창을 나오게 할수있게 구현해놔야함 ㅇ
 	5. 퀘스트
 	6. 장비상점
 	7. 인벤토리

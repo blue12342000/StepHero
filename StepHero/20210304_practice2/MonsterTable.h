@@ -5,7 +5,7 @@
 class MonsterTable
 {
 private:
-	Monster monster[Room::FieldType::wall][4];
+	Monster monster[Room::FieldType::FT_WALL][4];
 
 public:
 	MonsterTable();
@@ -14,7 +14,6 @@ public:
 	void Init(int strength);
 
 	// 몬스터 생성	
-	Monster* CreateMonster(int fieldType);
-	Monster* GetMonster(Room::FieldType fieldType);
+	Monster GetMonster(Room::FieldType fieldType);
 };
 

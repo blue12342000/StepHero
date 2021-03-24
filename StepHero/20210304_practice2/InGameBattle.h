@@ -45,7 +45,7 @@ private:
 	bool selectShopEnterYN = true;
 
 	Hero* player = nullptr;
-	Monster* monster = nullptr;
+	Monster monster;
 	vector<BattleLog> battleLog;
 	vector<string> battleItemName;
 

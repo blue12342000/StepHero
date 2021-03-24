@@ -17,9 +17,8 @@ void TextRender::Init(int width, int height)
 //{
 //}
 
-void TextRender::Render(bool isRefresh)
+void TextRender::Render()
 {
-	if (isRefresh) Refresh();
 	for (int i = 0; i <= lastDataLine && i < height; ++i)
 	{
 		cout << buffer[i] << endl;
@@ -69,9 +68,18 @@ void TextRender::Write(TextLayout layoutKind, const string& str)
 	else layout[layoutKind].PushBack(str);
 }
 
+void TextRender::Write(int offsetX, int offsetY, const string & str)
+{
+	if (offsetY >= height) return;
+
+	if (buffer[offsetY].length() < 1) buffer[offsetY] = string(width, ' ');
+
+	buffer[offsetY].replace(offsetX, str.length(), str);
+	lastDataLine = offsetY;
+}
+
 void TextRender::CopyTo(vector<string>& targetBuffer)
 {
-	Refresh();
 	for (int i = 0; i <= lastDataLine; ++i)
 	{
 		targetBuffer[i] = MakeString(TA_LEFT, width, buffer[i]);

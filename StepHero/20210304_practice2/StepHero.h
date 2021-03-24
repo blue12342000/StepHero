@@ -13,21 +13,6 @@ extern TextViewManager gTextViewManager;
 class StepHero
 {
 public:
-
-	enum GameState
-	{
-		INIT = 0,
-		TITLE_INPUT_DIFFI,
-		TITLE_INPUT_NAME,
-		INGAME,
-		INGAME_BATTLE,
-		INGAME_SHOP,
-		GAMEOVER,
-		ENDING
-	};
-
-	GameState gameState = GameState::INIT;
-
 	StepHero();
 	~StepHero();
 

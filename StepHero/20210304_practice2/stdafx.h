@@ -17,7 +17,10 @@
 #define TA_RIGHT 0x03
 
 using namespace std;
-using FunctionPtr = function<void(void*)>;
+
+typedef void* Target;
+typedef vector<void*> TargetArgs;
+using FunctionPtr = function<void(Target, TargetArgs)>;
 
 struct Difficulty
 {

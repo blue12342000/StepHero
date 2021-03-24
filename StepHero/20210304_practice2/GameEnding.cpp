@@ -39,6 +39,7 @@ void GameEnding::Update()
 void GameEnding::Render(vector<string>* targetBuffer)
 {
 	// 뷰에있는걸 출력
+	view.Refresh();
 	if (targetBuffer) view.CopyTo(*targetBuffer);
 	else view.Render();
 }

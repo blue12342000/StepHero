@@ -70,7 +70,7 @@ void InGameDungeon::Update()
 		}
 	}
 
-	if (dungeon->GetRoomFieldType(player->GetPosX(), player->GetPosY()) == Room::FieldType::out)
+	if (dungeon->GetRoomFieldType(player->GetPosX(), player->GetPosY()) == Room::FieldType::FT_EXIT)
 	{
 		gKeyManager.Clear();
 		gTextViewManager.ChangeView(gTextViewManager.VT_ESCAPE, gTextViewManager.AT_FADE_OUT_IN, 3000);
@@ -109,6 +109,8 @@ void InGameDungeon::Render(vector<string>* targetBuffer)
 	}
 
 	// 뷰에있는걸 출력
+	view.Refresh();
+	popup.Show(view, 40, 20, 40, 15);
 	if (targetBuffer) view.CopyTo(*targetBuffer);
 	else view.Render();
 }
