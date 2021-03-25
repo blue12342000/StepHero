@@ -11,6 +11,7 @@
 #include <fstream>
 #include <chrono>
 #include <vector>
+#include <typeinfo>
 
 #define TA_LEFT 0x01
 #define TA_CENTER 0x02
@@ -18,9 +19,20 @@
 
 using namespace std;
 
-typedef void* Target;
-typedef vector<void*> TargetArgs;
+using Target = void*;
+using TargetArgs = vector<void*>;
 using FunctionPtr = function<void(Target, TargetArgs)>;
+struct Command
+{
+	FunctionPtr func = nullptr;
+	Target target = nullptr;
+	TargetArgs args;
+
+	void Excute()
+	{
+		func(target, args);
+	}
+};
 
 struct Difficulty
 {

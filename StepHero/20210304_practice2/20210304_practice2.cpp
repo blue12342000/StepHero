@@ -37,40 +37,6 @@ int G_LVL_EXP_TABLE[15][2] = { {1, 10}
 							  ,{14, 50}
 							  ,{15, 50} };
 
-enum QusetType { HUNT, MOVE, ETC };
-struct QuestNode
-{
-	int id;
-	string name;
-	string desc;
-
-	void* owner = nullptr;
-
-	vector<FunctionPtr> questClearFnList;
-	vector<FunctionPtr> questFailedFnList;
-
-	QuestNode() { questClearFnList.push_back([]() {}); }
-	QuestNode(int id, string name, string desc):id(id),name(name),desc(desc) { }
-
-	// 선택퀘스트 - 본인과 같은 뎁스
-	QuestNode* firendQuset = nullptr;
-	// 이전퀘스트
-	QuestNode* exChainQuset = nullptr;
-	// 다음 연계 퀘스트
-	QuestNode* nextChainQuset = nullptr;
-};
-
-struct QuestList
-{
-	int size = 0;
-	QuestNode* QusetList = nullptr;
-};
-
-struct QusetTable
-{
-	QuestNode questNode[10];
-} gQusetTable;
-
 struct EquipItem
 {
 

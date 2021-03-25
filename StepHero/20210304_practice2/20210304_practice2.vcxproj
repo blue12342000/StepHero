@@ -157,12 +157,15 @@
     <ClCompile Include="GameTitle.cpp" />
     <ClCompile Include="GeneralShop.cpp" />
     <ClCompile Include="Hero.cpp" />
+    <ClCompile Include="HuntQuest.cpp" />
     <ClCompile Include="InGameBattle.cpp" />
     <ClCompile Include="InGameDungeon.cpp" />
     <ClCompile Include="KeyManager.cpp" />
     <ClCompile Include="Monster.cpp" />
     <ClCompile Include="MonsterTable.cpp" />
     <ClCompile Include="GameData.cpp" />
+    <ClCompile Include="Quest.cpp" />
+    <ClCompile Include="QuestManager.cpp" />
     <ClCompile Include="Shop.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -183,12 +186,15 @@
     <ClInclude Include="GameTitle.h" />
     <ClInclude Include="GeneralShop.h" />
     <ClInclude Include="Hero.h" />
+    <ClInclude Include="HuntQuest.h" />
     <ClInclude Include="InGameBattle.h" />
     <ClInclude Include="InGameDungeon.h" />
     <ClInclude Include="KeyManager.h" />
     <ClInclude Include="Monster.h" />
     <ClInclude Include="MonsterTable.h" />
     <ClInclude Include="GameData.h" />
+    <ClInclude Include="Quest.h" />
+    <ClInclude Include="QuestManager.h" />
     <ClInclude Include="Shop.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="FileManager.h" />

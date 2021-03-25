@@ -34,6 +34,12 @@
     <Filter Include="소스 파일\오브젝트\기본">
       <UniqueIdentifier>{0001b24f-8769-4eb5-8bac-f449b75bdab8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\메니저\퀘스트">
+      <UniqueIdentifier>{ba4b57e1-db45-4c4e-8697-243ccc472610}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\메니저\퀘스트\기본">
+      <UniqueIdentifier>{d71f63b4-479a-46ff-9d2f-82f693d97a42}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="20210304_practice2.cpp">
@@ -98,6 +104,15 @@
     </ClCompile>
     <ClCompile Include="GameEscape.cpp">
       <Filter>소스 파일\게임화면</Filter>
+    </ClCompile>
+    <ClCompile Include="QuestManager.cpp">
+      <Filter>소스 파일\메니저\퀘스트</Filter>
+    </ClCompile>
+    <ClCompile Include="HuntQuest.cpp">
+      <Filter>소스 파일\메니저\퀘스트</Filter>
+    </ClCompile>
+    <ClCompile Include="Quest.cpp">
+      <Filter>소스 파일\메니저\퀘스트\기본</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +181,15 @@
     </ClInclude>
     <ClInclude Include="GameEscape.h">
       <Filter>소스 파일\게임화면</Filter>
+    </ClInclude>
+    <ClInclude Include="QuestManager.h">
+      <Filter>소스 파일\메니저\퀘스트</Filter>
+    </ClInclude>
+    <ClInclude Include="HuntQuest.h">
+      <Filter>소스 파일\메니저\퀘스트</Filter>
+    </ClInclude>
+    <ClInclude Include="Quest.h">
+      <Filter>소스 파일\메니저\퀘스트\기본</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
