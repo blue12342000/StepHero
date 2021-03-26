@@ -35,9 +35,9 @@ protected:
 public:
 	~Quest();
 
-	inline int GetId();
-	inline string GetName();
-	inline string GetDesc();
+	inline int GetId() { return id; }
+	inline string GetName() { return name; }
+	inline string GetDesc() { return desc; }
 
 	shared_ptr<Quest> GetNextQuest();
 	shared_ptr<Quest> GetPreQuset();

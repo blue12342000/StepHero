@@ -13,21 +13,6 @@ Quest::~Quest()
 {
 }
 
-int Quest::GetId()
-{
-	return id;
-}
-
-string Quest::GetName()
-{
-	return name;
-}
-
-string Quest::GetDesc()
-{
-	return desc;
-}
-
 shared_ptr<Quest> Quest::GetNextQuest()
 {
 	return next;

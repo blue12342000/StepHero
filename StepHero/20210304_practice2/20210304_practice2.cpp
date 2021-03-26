@@ -9,6 +9,7 @@
 #include "DungeonTemplate.h"
 #include "TextViewManager.h"
 #include "GameData.h"
+#include "QuestManager.h"
 
 DungeonTemplate gDungeonTemplate[10];
 MonsterTable gMonsterTable;
@@ -16,6 +17,7 @@ KeyManager gKeyManager;
 TextViewManager gTextViewManager;
 Difficulty difficulty;
 GameData gGameData;
+QuestManager gQuestManager;
 
 // 0: 땅, 1: 숲, 2: 늪, 3: 벽, 4: 불, 5: 탈출구
 char G_CHAR_FIELD_TYPE[6] = { '.', 'T', '~', '#', 'A', 'E' };

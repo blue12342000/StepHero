@@ -44,7 +44,6 @@ struct Difficulty
 };
 
 typedef int TextAlign;
-inline string MakeString(TextAlign align, int width, string str);
 
 inline string MakeString(TextAlign align, int width, string str)
 {

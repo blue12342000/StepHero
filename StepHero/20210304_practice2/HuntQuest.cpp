@@ -6,7 +6,7 @@ HuntQuest::HuntQuest()
 {
 }
 
-HuntQuest::HuntQuest(int id, string name, string desc, Command complete, Command failed) :HuntQuest(id, name, desc, complete, failed)
+HuntQuest::HuntQuest(int count, int id, string name, string desc, Command complete, Command failed) :Quest(id, name, desc, complete, failed), count(count)
 {
 	type = Quest::QusetType::QT_HUNT;
 }
