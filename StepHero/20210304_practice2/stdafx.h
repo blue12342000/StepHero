@@ -12,6 +12,7 @@
 #include <chrono>
 #include <vector>
 #include <typeinfo>
+#include "GameObject.h"
 
 #define TA_LEFT 0x01
 #define TA_CENTER 0x02
@@ -19,13 +20,13 @@
 
 using namespace std;
 
-using Target = void*;
+using TargetPtr = GameObject*;
 using TargetArgs = vector<void*>;
-using FunctionPtr = function<void(Target, TargetArgs)>;
+using FunctionPtr = function<void(TargetPtr, TargetArgs)>;
 struct Command
 {
 	FunctionPtr func = nullptr;
-	Target target = nullptr;
+	TargetPtr target = nullptr;
 	TargetArgs args;
 
 	void Excute()

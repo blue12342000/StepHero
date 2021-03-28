@@ -5,7 +5,7 @@ Quest::Quest()
 {
 }
 
-Quest::Quest(int id, string name, string desc, Command complete, Command failed):id(id),name(name),desc(desc), completeCmd(complete), failedCmd(failed)
+Quest::Quest(int id, string name, string desc, QuestReward completeReward, QuestReward failedReward):id(id),name(name),desc(desc), completeReward(completeReward), failedReward(failedReward), isComplete(false)
 {
 }
 
@@ -25,10 +25,10 @@ shared_ptr<Quest> Quest::GetPreQuset()
 
 void Quest::Complete()
 {
-	completeCmd.Excute();
+	//completeCmd.Excute();
 }
 
 void Quest::Failed()
 {
-	failedCmd.Excute();
+	//failedCmd.Excute();
 }

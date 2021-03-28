@@ -5,15 +5,16 @@
 class HuntQuest : public Quest
 {
 private:
-	int count;
+	int needCount;
+	int currCount;
 
 private:
 	HuntQuest();
 
 public:
-	HuntQuest(int count, int id, string name, string desc, Command complete, Command failed);
+	HuntQuest(int needCount, int id, string name, string desc, QuestReward completeReward, QuestReward failedReward);
 	~HuntQuest();
 
-	void Progress(Target target) override;
+	void Progress(void* questParam) override;
 };
 

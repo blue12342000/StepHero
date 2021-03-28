@@ -143,6 +143,9 @@ void InGameBattle::Update()
 				// º±≈√
 				state = BattleState::BS_CHOOSE_SHOP;
 				gKeyManager.Request(KeyManager::InputType::SELECT);
+
+				gQuestManager.Progress(Quest::QusetType::QT_HUNT, &monster);
+
 				//gKeyManager.Clear();
 				//gTextViewManager.ChangeView(gTextViewManager.VT_INGAME, gTextViewManager.AT_ZIGZAG_OUT_IN, 1000);
 			}

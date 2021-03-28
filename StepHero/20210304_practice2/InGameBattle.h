@@ -4,12 +4,14 @@
 #include "KeyManager.h"
 #include "MonsterTable.h"
 #include "GameData.h"
+#include "QuestManager.h"
 
 extern TextViewManager gTextViewManager;
 extern KeyManager gKeyManager;
 extern MonsterTable gMonsterTable;
 extern Difficulty difficulty;
 extern GameData gGameData;
+extern QuestManager gQuestManager;
 
 class InGameBattle : public TextView
 {

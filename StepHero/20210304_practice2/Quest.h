@@ -15,14 +15,27 @@ public:
 		QT_HUNT, QT_MOVE, QT_NONE
 	};
 
+	enum class RewardType
+	{
+		RT_SUCCESS_GOLD, RT_SUCCESS_EXP, RT_FAILED_DAMAGE
+	};
+
+	struct QuestReward
+	{
+		vector<RewardType> rewards;
+		vector<int> args;
+	};
+
 protected:
+	bool isComplete;
+
 	int id;
 	QusetType type = QusetType::QT_NONE;
 	string name;
 	string desc;
 
-	Command completeCmd;
-	Command failedCmd;
+	QuestReward completeReward;
+	QuestReward failedReward;
 
 	// 연계 퀘스트 있을때만
 	shared_ptr<Quest> next = nullptr;
@@ -30,7 +43,7 @@ protected:
 
 protected:
 	Quest();
-	Quest(int id, string name, string desc, Command complete, Command failed);
+	Quest(int id, string name, string desc, QuestReward completeReward, QuestReward failedReward);
 
 public:
 	~Quest();
@@ -45,6 +58,6 @@ public:
 	void Complete();
 	void Failed();
 
-	virtual void Progress(Target target) = 0;
+	virtual void Progress(void* questParam) = 0;
 };
 

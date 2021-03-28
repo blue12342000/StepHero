@@ -6,15 +6,16 @@ class Monster;
 class QuestManager
 {
 private:
-	map<int, shared_ptr<Quest>> questMap;
+	map<int, Quest*> questMap;
+	map<Quest::QusetType, vector<Quest*>> questGroup;
 
 public:
 	QuestManager();
 	~QuestManager();
 
-	shared_ptr<Quest> GetQuest(int id) { return questMap[id]; }
+	Quest* GetQuest(int id) { return questMap[id]; }
 
 	void AddQuest(Quest* quest);
-	void Progress(Quest::QusetType questType, void* target);
+	void Progress(Quest::QusetType questType, void* questParam);
 };
 

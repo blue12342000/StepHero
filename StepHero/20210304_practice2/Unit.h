@@ -1,5 +1,7 @@
 #pragma once
-class Unit
+#include "GameObject.h"
+
+class Unit : public GameObject
 {
 protected:
 	int lvl;
